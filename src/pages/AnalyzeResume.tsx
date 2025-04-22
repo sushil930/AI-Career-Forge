@@ -87,7 +87,7 @@ const AnalyzeResume = () => {
                   id="resume-upload"
                 />
                 <label htmlFor="resume-upload">
-                  <Button as="span" variant="outline">
+                  <Button variant="outline" className="cursor-pointer">
                     Browse Files
                   </Button>
                 </label>
