@@ -28,7 +28,7 @@ const Home = () => {
           </div>
           <div className="md:w-1/2 flex justify-center">
             <img 
-              src="/placeholder.svg" 
+              src="/lovable-uploads/353bfbb2-cfb8-43d4-9933-11ecdf186bd3.png" 
               alt="AI Resume Analysis" 
               className="max-w-md w-full rounded-lg shadow-lg" 
             />
