@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +15,7 @@ import DashboardHome from "./pages/dashboard/DashboardHome";
 import CoverLetterGenerator from "./pages/dashboard/CoverLetterGenerator";
 import MyResumes from "./pages/dashboard/MyResumes";
 import HelpAndTips from "./pages/dashboard/HelpAndTips";
+import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +34,18 @@ const App = () => (
                 <Navbar />
                 <main className="flex-grow">
                   <Home />
+                </main>
+                <Footer />
+              </>
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              <>
+                <Navbar />
+                <main className="flex-grow">
+                  <Auth />
                 </main>
                 <Footer />
               </>
