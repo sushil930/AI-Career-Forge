@@ -7,18 +7,21 @@ import { Input } from "@/components/ui/input";
 import { analyzeResume, parseResumeText, ResumeAnalysis } from "@/utils/resumeUtils";
 import { toast } from "sonner";
 import { CircleDashed, Upload } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const AnalyzeResume = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<ResumeAnalysis | null>(null);
-  
+
+  const navigate = useNavigate();
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       const fileType = selectedFile.type;
-      
+
       // Check if the file is a PDF or DOCX
       if (
         fileType === "application/pdf" ||
@@ -30,31 +33,35 @@ const AnalyzeResume = () => {
       }
     }
   };
-  
+
   const handleUpload = async () => {
     if (!file) {
       toast.error("Please select a file to upload");
       return;
     }
-    
+
     try {
       setIsUploading(true);
       const resumeText = await parseResumeText(file);
       setIsUploading(false);
-      
+
       setIsAnalyzing(true);
       const analysis = await analyzeResume(resumeText);
       setAnalysisResult(analysis);
       setIsAnalyzing(false);
-      
+
       toast.success("Resume analysis complete!");
+
+      // Navigate to dashboard passing analysis result in state
+      navigate("/dashboard", { state: { analysis } });
+
     } catch (error) {
       toast.error("Error analyzing resume. Please try again.");
       setIsUploading(false);
       setIsAnalyzing(false);
     }
   };
-  
+
   return (
     <div className="container mx-auto px-6 py-12">
       <div className="max-w-5xl mx-auto">
@@ -64,7 +71,7 @@ const AnalyzeResume = () => {
             Upload your resume to get AI-powered insights and suggestions
           </p>
         </div>
-        
+
         {!analysisResult ? (
           <Card className="mb-8">
             <CardHeader>
@@ -78,7 +85,7 @@ const AnalyzeResume = () => {
                 <Upload size={40} className="text-gray-400 mb-4" />
                 <p className="text-lg font-medium mb-2">Drag and drop your resume</p>
                 <p className="text-gray-500 mb-6">or</p>
-                
+
                 <Input
                   type="file"
                   accept=".pdf,.docx"
@@ -91,14 +98,14 @@ const AnalyzeResume = () => {
                     Browse Files
                   </Button>
                 </label>
-                
+
                 {file && (
                   <div className="mt-4 text-sm text-gray-600">
                     Selected file: {file.name}
                   </div>
                 )}
               </div>
-              
+
               <div className="mt-6 flex justify-center">
                 <Button 
                   onClick={handleUpload} 
@@ -142,7 +149,7 @@ const AnalyzeResume = () => {
                 </div>
               </CardContent>
             </Card>
-            
+
             {/* Category Scores */}
             <div>
               <h2 className="text-xl font-semibold mb-4">Category Scores</h2>
@@ -169,7 +176,7 @@ const AnalyzeResume = () => {
                 />
               </div>
             </div>
-            
+
             {/* Suggestions */}
             <Card>
               <CardHeader>
@@ -191,7 +198,7 @@ const AnalyzeResume = () => {
                 </ul>
               </CardContent>
             </Card>
-            
+
             {/* Strengths */}
             <Card>
               <CardHeader>
@@ -213,7 +220,7 @@ const AnalyzeResume = () => {
                 </ul>
               </CardContent>
             </Card>
-            
+
             {/* Actions */}
             <div className="flex flex-wrap gap-4 justify-center">
               <Button 
