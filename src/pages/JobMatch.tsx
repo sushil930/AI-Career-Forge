@@ -1,36 +1,66 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { JobMatch, matchResumeToJob } from "@/utils/resumeUtils";
 import { CircleDashed, FileText } from "lucide-react";
 import { toast } from "sonner";
+import apiClient from "@/lib/api";
+
+// Define type for the expected analysis result from the API
+// (Should match the structure returned by the backend controller)
+interface MatchAnalysisResult {
+  matchScore: number;
+  missingKeywords: string[];
+  matchingKeywords: string[];
+  suggestions: string[];
+}
 
 const JobMatchPage = () => {
   const [resumeText, setResumeText] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [matchResult, setMatchResult] = useState<JobMatch | null>(null);
-  
+  // Update state type to use the new interface
+  const [matchResult, setMatchResult] = useState<MatchAnalysisResult | null>(null);
+
   const handleMatch = async () => {
     if (!resumeText.trim() || !jobDescription.trim()) {
       toast.error("Please enter both resume text and job description");
       return;
     }
-    
+
     setIsAnalyzing(true);
+    setMatchResult(null); // Clear previous results
+
     try {
-      const result = await matchResumeToJob(resumeText, jobDescription);
-      setMatchResult(result);
-      toast.success("Job match analysis complete!");
-    } catch (error) {
-      toast.error("Error analyzing job match. Please try again.");
+      // Call the backend API endpoint
+      const response = await apiClient.post('/match/resume-job', {
+        resumeText, // Sending the raw text
+        jobDescription,
+      });
+
+      // Store the analysis object from the response
+      if (response.status === 200 && response.data.analysis) {
+        setMatchResult(response.data.analysis);
+        toast.success(response.data.message || "Job match analysis complete!");
+      } else {
+        toast.error("Analysis completed but response format was unexpected.");
+        console.error("Unexpected match response:", response);
+      }
+
+    } catch (error: any) {
+      console.error("Match Error:", error);
+      let errorMessage = "Error analyzing job match. Please try again.";
+      if (error.response) {
+        errorMessage = error.response.data?.message || errorMessage;
+      } else if (error.request) {
+        errorMessage = "Network error. Could not reach the server.";
+      }
+      toast.error(errorMessage);
     } finally {
       setIsAnalyzing(false);
     }
   };
-  
+
   return (
     <div className="container mx-auto px-6 py-12">
       <div className="max-w-5xl mx-auto">
@@ -40,7 +70,7 @@ const JobMatchPage = () => {
             Compare your resume against a job description to see how well you match
           </p>
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <Card>
             <CardHeader>
@@ -50,16 +80,17 @@ const JobMatchPage = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Textarea 
+              <Textarea
                 value={resumeText}
                 onChange={(e) => setResumeText(e.target.value)}
                 placeholder="Paste your resume text here..."
                 rows={12}
                 className="resize-none"
+                disabled={isAnalyzing}
               />
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle>Job Description</CardTitle>
@@ -68,20 +99,21 @@ const JobMatchPage = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Textarea 
+              <Textarea
                 value={jobDescription}
                 onChange={(e) => setJobDescription(e.target.value)}
                 placeholder="Paste the job description here..."
                 rows={12}
                 className="resize-none"
+                disabled={isAnalyzing}
               />
             </CardContent>
           </Card>
         </div>
-        
+
         <div className="flex justify-center mb-12">
-          <Button 
-            onClick={handleMatch} 
+          <Button
+            onClick={handleMatch}
             disabled={isAnalyzing || !resumeText.trim() || !jobDescription.trim()}
             size="lg"
           >
@@ -95,7 +127,7 @@ const JobMatchPage = () => {
             )}
           </Button>
         </div>
-        
+
         {matchResult && (
           <div className="space-y-8 animate-fade-in">
             {/* Match Score */}
@@ -116,7 +148,33 @@ const JobMatchPage = () => {
                 </div>
               </CardContent>
             </Card>
-            
+
+            {/* Matching Keywords */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Matching Keywords</CardTitle>
+                <CardDescription>
+                  Keywords found in both your resume and the job description
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {matchResult.matchingKeywords?.length > 0 ? (
+                    matchResult.matchingKeywords.map((keyword, index) => (
+                      <div
+                        key={index}
+                        className="bg-green-100 text-green-800 px-3 py-1 rounded-full"
+                      >
+                        {keyword}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No strong keyword matches found.</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Missing Keywords */}
             <Card>
               <CardHeader>
@@ -127,18 +185,22 @@ const JobMatchPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
-                  {matchResult.missingKeywords.map((keyword, index) => (
-                    <div 
-                      key={index} 
-                      className="bg-red-100 text-red-800 px-3 py-1 rounded-full"
-                    >
-                      {keyword}
-                    </div>
-                  ))}
+                  {matchResult.missingKeywords?.length > 0 ? (
+                    matchResult.missingKeywords.map((keyword, index) => (
+                      <div
+                        key={index}
+                        className="bg-red-100 text-red-800 px-3 py-1 rounded-full"
+                      >
+                        {keyword}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No missing keywords identified.</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
-            
+
             {/* Suggestions */}
             <Card>
               <CardHeader>
@@ -149,18 +211,22 @@ const JobMatchPage = () => {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
-                  {matchResult.suggestions.map((suggestion, index) => (
-                    <li key={index} className="flex items-start">
-                      <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-100 text-theme-blue text-sm mr-3 mt-0.5">
-                        {index + 1}
-                      </span>
-                      <span>{suggestion}</span>
-                    </li>
-                  ))}
+                  {matchResult.suggestions?.length > 0 ? (
+                    matchResult.suggestions.map((suggestion, index) => (
+                      <li key={index} className="flex items-start">
+                        <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-100 text-theme-blue text-sm mr-3 mt-0.5 flex-shrink-0">
+                          {index + 1}
+                        </span>
+                        <span>{suggestion}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No specific suggestions available.</p>
+                  )}
                 </ul>
               </CardContent>
             </Card>
-            
+
             {/* Actions */}
             <div className="flex flex-wrap gap-4 justify-center">
               <Button asChild variant="outline">

@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +15,9 @@ import DashboardHome from "./pages/dashboard/DashboardHome";
 import CoverLetterGenerator from "./pages/dashboard/CoverLetterGenerator";
 import MyResumes from "./pages/dashboard/MyResumes";
 import HelpAndTips from "./pages/dashboard/HelpAndTips";
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 const queryClient = new QueryClient();
 
@@ -76,15 +78,45 @@ const App = () => (
             }
           />
 
-          {/* Dashboard routes */}
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<DashboardHome />} />
-            <Route path="analyze" element={<AnalyzeResume />} />
-            <Route path="builder" element={<ResumeBuilder />} />
-            <Route path="job-match" element={<JobMatch />} />
-            <Route path="cover-letter" element={<CoverLetterGenerator />} />
-            <Route path="my-resumes" element={<MyResumes />} />
-            <Route path="help" element={<HelpAndTips />} />
+          {/* Login route */}
+          <Route
+            path="/login"
+            element={
+              <>
+                <Navbar />
+                <main className="flex-grow">
+                  <LoginPage />
+                </main>
+                <Footer />
+              </>
+            }
+          />
+
+          {/* Signup route */}
+          <Route
+            path="/signup"
+            element={
+              <>
+                <Navbar />
+                <main className="flex-grow">
+                  <SignupPage />
+                </main>
+                <Footer />
+              </>
+            }
+          />
+
+          {/* Dashboard routes - Protected */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<DashboardHome />} />
+              <Route path="analyze" element={<AnalyzeResume />} />
+              <Route path="builder" element={<ResumeBuilder />} />
+              <Route path="job-match" element={<JobMatch />} />
+              <Route path="cover-letter" element={<CoverLetterGenerator />} />
+              <Route path="my-resumes" element={<MyResumes />} />
+              <Route path="help" element={<HelpAndTips />} />
+            </Route>
           </Route>
 
           {/* Redirect /dashboard to /dashboard if missing trailing slash */}
