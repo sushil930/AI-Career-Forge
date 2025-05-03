@@ -4,7 +4,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
 import { Footer } from "./components/Footer";
+import ProtectedRoute from "./components/ProtectedRoute"; // adjust path if different
 import Home from "./pages/Home";
 import AnalyzeResume from "./pages/AnalyzeResume";
 import ResumeBuilder from "./pages/ResumeBuilder";
@@ -33,18 +36,6 @@ const App = () => (
                 <Navbar />
                 <main className="flex-grow">
                   <Home />
-                </main>
-                <Footer />
-              </>
-            }
-          />
-          <Route
-            path="/login"
-            element={
-              <>
-                <Navbar />
-                <main className="flex-grow">
-                  <Auth />
                 </main>
                 <Footer />
               </>
