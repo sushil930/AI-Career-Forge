@@ -1,10 +1,17 @@
-
 import { Button } from "@/components/ui/button";
 import { FeatureCard } from "@/components/FeatureCard";
 import { Link } from "react-router-dom";
 import { ArrowRight, FileSearch, FileUp, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
+  const navigate = useNavigate();
+
+  const handleButtonClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate("/login");
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -18,11 +25,22 @@ const Home = () => {
               Upload, analyze, and improve your resume with powerful AI tools. Stand out from the crowd and land your dream job.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button asChild size="lg" className="bg-white text-blue-700 hover:bg-gray-100">
-                <Link to="/analyze">Analyze Your Resume</Link>
+              <Button 
+                asChild 
+                size="lg" 
+                className="bg-white text-blue-700 hover:bg-gray-100" 
+                onClick={handleButtonClick}
+              >
+                <a href="/login">Analyze Your Resume</a>
               </Button>
-              <Button asChild size="lg" variant="outline" className="border-white text-[#9b87f5] hover:bg-[#9b87f5] hover:text-white transition-colors">
-                <Link to="/builder">Build a Resume</Link>
+              <Button 
+                asChild 
+                size="lg" 
+                variant="outline" 
+                className="border-white text-[#9b87f5] hover:bg-[#9b87f5] hover:text-white transition-colors"
+                onClick={handleButtonClick}
+              >
+                <a href="/login">Build a Resume</a>
               </Button>
             </div>
           </div>
@@ -65,10 +83,8 @@ const Home = () => {
           </div>
 
           <div className="text-center mt-12">
-            <Button asChild size="lg">
-              <Link to="/analyze" className="flex items-center">
-                Get Started <ArrowRight className="ml-2" size={18} />
-              </Link>
+            <Button size="lg" onClick={handleButtonClick} className="flex items-center">
+              Get Started <ArrowRight className="ml-2" size={18} />
             </Button>
           </div>
         </div>
@@ -117,8 +133,8 @@ const Home = () => {
           <p className="text-xl mb-8 max-w-3xl mx-auto">
             Start using AI Resume Pro today and increase your chances of landing your dream job.
           </p>
-          <Button asChild size="lg" className="bg-theme-blue hover:bg-blue-600">
-            <Link to="/analyze">Get Started Now</Link>
+          <Button size="lg" className="bg-theme-blue hover:bg-blue-600" onClick={handleButtonClick}>
+            Get Started Now
           </Button>
         </div>
       </section>

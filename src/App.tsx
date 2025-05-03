@@ -15,9 +15,6 @@ import DashboardHome from "./pages/dashboard/DashboardHome";
 import CoverLetterGenerator from "./pages/dashboard/CoverLetterGenerator";
 import MyResumes from "./pages/dashboard/MyResumes";
 import HelpAndTips from "./pages/dashboard/HelpAndTips";
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import { ProtectedRoute } from './components/ProtectedRoute';
 
 const queryClient = new QueryClient();
 
@@ -36,6 +33,18 @@ const App = () => (
                 <Navbar />
                 <main className="flex-grow">
                   <Home />
+                </main>
+                <Footer />
+              </>
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              <>
+                <Navbar />
+                <main className="flex-grow">
+                  <Auth />
                 </main>
                 <Footer />
               </>
