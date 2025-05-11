@@ -4,6 +4,8 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/ge
 import { Resume } from '../models/resume.model'; // To potentially fetch resume by ID
 // Import initialized db from config
 import { db } from '../config/firebase.config';
+import pdfParse from 'pdf-parse'; // For parsing PDF files
+import mammoth from 'mammoth'; // For parsing DOCX files
 
 // const db = admin.firestore(); // Removed: Use imported db
 
@@ -20,23 +22,52 @@ export const matchResumeToJob = async (req: Request, res: Response): Promise<voi
         }
         const userId = req.user.uid;
 
-        const { resumeId, resumeText, jobDescription } = req.body;
+        // Destructure jobDescription from req.body. resumeId and resumeText are no longer primary inputs from frontend.
+        const { jobDescription, resumeId, resumeText: fallbackResumeText } = req.body;
 
-        if (!jobDescription || (!resumeId && !resumeText)) {
-            res.status(400).json({ message: 'Bad Request: Missing jobDescription and either resumeId or resumeText' });
+        if (!jobDescription) {
+            res.status(400).json({ message: 'Bad Request: Missing jobDescription' });
             return;
         }
 
         let currentResumeText = '';
+        let resumeSourceDescription = 'Unknown';
 
         // --- Get Resume Text --- 
-        if (resumeId) {
-            console.log(`[match]: Fetching resume ${resumeId} for user ${userId}`);
+        if (req.file) {
+            console.log(`[match]: Processing uploaded resume file for user ${userId}: ${req.file.originalname}`);
+            resumeSourceDescription = `Uploaded file: ${req.file.originalname}`;
+            try {
+                if (req.file.mimetype === "application/pdf") {
+                    const data = await pdfParse(req.file.buffer);
+                    currentResumeText = data.text;
+                } else if (req.file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+                    const { value } = await mammoth.extractRawText({ buffer: req.file.buffer });
+                    currentResumeText = value;
+                } else {
+                    // This should be caught by multer's fileFilter, but handle defensively
+                    res.status(400).json({ message: 'Unsupported file type provided.' });
+                    return;
+                }
+                if (!currentResumeText || !currentResumeText.trim()) {
+                    console.error(`[match]: Failed to extract text from uploaded file ${req.file.originalname} for user ${userId}. Mimetype: ${req.file.mimetype}`);
+                    res.status(400).json({ message: 'Could not extract text from the uploaded resume file. It might be empty or corrupted.' });
+                    return;
+                }
+                console.log(`[match]: Successfully extracted text from ${req.file.originalname} for user ${userId}`);
+            } catch (extractionError: any) {
+                console.error(`[match]: Error extracting text from file ${req.file.originalname} for user ${userId}:`, extractionError);
+                res.status(500).json({ message: 'Error processing uploaded resume file.', error: extractionError.message });
+                return;
+            }
+        } else if (resumeId) { // Fallback if frontend or API caller still uses resumeId
+            console.log(`[match]: Fetching resume by ID ${resumeId} for user ${userId} (fallback)`);
+            resumeSourceDescription = `ID: ${resumeId}`;
             const resumeRef = db.collection('resumes').doc(resumeId);
             const resumeDoc = await resumeRef.get();
 
             if (!resumeDoc.exists) {
-                res.status(404).json({ message: 'Resume not found' });
+                res.status(404).json({ message: 'Resume not found for the given ID' });
                 return;
             }
             const resumeData = resumeDoc.data() as Resume;
@@ -45,21 +76,27 @@ export const matchResumeToJob = async (req: Request, res: Response): Promise<voi
                 return;
             }
             if (!resumeData.parsedText) {
-                res.status(400).json({ message: 'Cannot match: Resume text is missing or empty' });
+                res.status(400).json({ message: 'Cannot match: Resume text is missing or empty for the given ID' });
                 return;
             }
             currentResumeText = resumeData.parsedText;
-            console.log(`[match]: Fetched resume text for ${resumeId}`);
-        } else if (resumeText) {
-            console.log(`[match]: Using provided resume text for user ${userId}`);
-            currentResumeText = resumeText;
+            console.log(`[match]: Fetched resume text for ${resumeId} (fallback)`);
+        } else if (fallbackResumeText) { // Fallback for direct text submission
+            console.log(`[match]: Using provided resume text for user ${userId} (fallback)`);
+            resumeSourceDescription = 'Direct Text (fallback)';
+            currentResumeText = fallbackResumeText;
         } else {
-            // Should be caught by initial validation, but handle defensively
-            res.status(400).json({ message: 'Internal Error: No resume source identified' });
+            // No resume source provided
+            res.status(400).json({ message: 'Bad Request: No resume source provided (file, ID, or text).' });
             return;
         }
 
-        console.log(`[match]: Starting comparison for user ${userId}, Resume source: ${resumeId ? `ID ${resumeId}` : 'Direct Text'}`);
+        if (!currentResumeText.trim()) {
+            res.status(400).json({ message: 'Resume text is empty. Cannot perform match.' });
+            return;
+        }
+
+        console.log(`[match]: Starting comparison for user ${userId}. Resume source: ${resumeSourceDescription}`);
 
         // --- Prepare Prompt for Gemini --- 
         const prompt = `
@@ -92,31 +129,32 @@ export const matchResumeToJob = async (req: Request, res: Response): Promise<voi
             { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
         ];
 
-        console.log(`[match]: Sending comparison prompt to Gemini for user ${userId}`);
+        console.log(`[match]: Sending comparison prompt to Gemini for user ${userId}. Prompt length (approx): ${prompt.length}`);
         const result = await model.generateContent(
-            prompt
-            // { generationConfig, safetySettings } // Consider enabling these
+            prompt,
+            // generationConfig, // Consider re-adding if issues persist with default settings
+            // safetySettings  // Consider re-adding if issues persist with default settings
         );
         const response = await result.response;
         const aiTextResponse = response.text();
-        console.log(`[match]: Received raw comparison response from Gemini for user ${userId}`);
+        console.log(`[match]: Received raw comparison response from Gemini for user ${userId}. Length: ${aiTextResponse.length}`);
 
         // --- Parse Gemini Response --- 
         let analysisResult: any = {};
         try {
-            const jsonMatch = aiTextResponse.match(/\{.*\}/s);
-            if (jsonMatch && jsonMatch[0]) {
-                analysisResult = JSON.parse(jsonMatch[0]);
+            // Improved JSON extraction: look for JSON block specifically
+            const jsonMatch = aiTextResponse.match(/```json\n(\{.*?\})\n```/s) || aiTextResponse.match(/(\{.*?\})/s);
+            if (jsonMatch && jsonMatch[1]) {
+                analysisResult = JSON.parse(jsonMatch[1]);
                 console.log(`[match]: Successfully parsed JSON from Gemini comparison response.`);
             } else {
-                console.error(`[match]: Failed to find valid JSON in Gemini comparison response. Response: ${aiTextResponse}`);
+                console.error(`[match]: Failed to find valid JSON in Gemini comparison response for user ${userId}. Response: ${aiTextResponse}`);
                 throw new Error('Failed to parse AI matching response as JSON.');
             }
-            // TODO: Add validation for the structure of analysisResult
         } catch (parseError: any) {
-            console.error(`[match]: Error parsing Gemini comparison response:`, parseError);
-            console.error(`[match]: Raw AI comparison response: ${aiTextResponse}`);
-            res.status(500).json({ message: 'Failed to parse AI matching response', error: parseError.message });
+            console.error(`[match]: Error parsing Gemini comparison response for user ${userId}:`, parseError);
+            console.error(`[match]: Raw AI comparison response for user ${userId}: ${aiTextResponse}`);
+            res.status(500).json({ message: 'Failed to parse AI matching response', error: parseError.message, rawResponse: aiTextResponse });
             return;
         }
 
@@ -124,11 +162,11 @@ export const matchResumeToJob = async (req: Request, res: Response): Promise<voi
         res.status(200).json({ message: 'Resume matched to job description successfully', analysis: analysisResult });
 
     } catch (error: any) {
-        console.error("[match]: Resume-Job matching error:", error);
-        if (error.message.includes('GOOGLE_API_KEY_INVALID')) {
+        console.error("[match]: Resume-Job matching error for user", req.user?.uid, ":", error);
+        if (error.message && error.message.includes('GOOGLE_API_KEY_INVALID')) {
             res.status(500).json({ message: 'Internal Server Error: Invalid Gemini API Key configured.' });
-        } else if (error.code === 'permission-denied' || error.status === 'PERMISSION_DENIED') {
-            res.status(500).json({ message: 'Internal Server Error: Firebase permission issue.' });
+        } else if (error.code === 'permission-denied' || (error.status && error.status === 'PERMISSION_DENIED')) {
+            res.status(500).json({ message: 'Internal Server Error: Firebase/Google API permission issue.' });
         } else {
             res.status(500).json({ message: 'Internal server error during matching', error: error.message });
         }
