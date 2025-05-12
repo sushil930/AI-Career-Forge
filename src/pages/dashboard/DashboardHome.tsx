@@ -12,9 +12,11 @@ import {
   CheckCircle2, 
   Clock, 
   LineChart,
-  Loader2
+  Loader2,
+  PlusCircle // Added for the new button
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import apiClient from "@/lib/api"; // Corrected: Import default export
 
 // Define interfaces for our data structures
 interface StatData {
@@ -28,10 +30,12 @@ interface StatData {
 }
 
 interface ActivityData {
+  id: string; // Added an ID for key prop
   title: string;
   description: string;
   date: string;
   icon: JSX.Element;
+  type: 'resume_upload' | 'resume_analysis' | 'job_match' | 'resume_generation'; // Example types
 }
 
 interface TaskData {
@@ -46,6 +50,22 @@ interface ResumeStrengthData {
   skills: number;
   readability: number;
 }
+
+// Helper to get an icon based on activity type
+const getActivityIcon = (type: ActivityData['type']) => {
+  switch (type) {
+    case 'resume_upload':
+      return <Upload className="h-5 w-5 text-blue-500" />;
+    case 'resume_analysis':
+      return <FileText className="h-5 w-5 text-green-500" />;
+    case 'job_match':
+      return <BarChart className="h-5 w-5 text-purple-500" />;
+    case 'resume_generation':
+      return <FileEdit className="h-5 w-5 text-orange-500" />;
+    default:
+      return <TrendingUp className="h-5 w-5 text-gray-500" />;
+  }
+};
 
 export default function DashboardHome() {
   const [isLoading, setIsLoading] = useState(true);
@@ -66,48 +86,117 @@ export default function DashboardHome() {
     day: 'numeric'
   }).format(currentDate);
 
+  // Function to add mock activity data
+  const addMockActivity = () => {
+    const mockActivity: ActivityData = {
+      id: `mock-${Date.now()}`, // Unique ID
+      type: Math.random() > 0.5 ? 'resume_upload' : 'job_match', // Random type
+      title: `Mock Activity ${recentActivitiesData.length + 1}`,
+      description: 'This is a dynamically added mock activity.',
+      date: new Date().toLocaleString(),
+      icon: Math.random() > 0.5 ? getActivityIcon('resume_upload') : getActivityIcon('job_match'),
+    };
+    setRecentActivitiesData(prevActivities => [mockActivity, ...prevActivities]);
+  };
+
   // Simulate data fetching
   useEffect(() => {
-    const timer = setTimeout(() => {
-      // Placeholder data, replace with actual API calls
+    const fetchData = async () => {
+      // Set isLoading to true initially
+      setIsLoading(true);
+
+      // Set ALL placeholder/mock data for Stats, Tasks, Resume Strength, and Recent Activities immediately.
+      // This ensures they are populated for screenshots regardless of API call status.
       setStatsData([
         { 
           title: "Resume Score", 
-          value: "0", 
-          trend: "",
+          value: "78", 
+          trend: "+5%",
+          trendUp: true,
           description: "Overall resume quality",
           icon: <LineChart className="h-5 w-5 text-blue-500" />, 
           color: "from-blue-500 to-indigo-600"
         },
         { 
           title: "Job Match Rate", 
-          value: "0", 
-          trend: "",
+          value: "62", 
+          trend: "-2%",
+          trendUp: false,
           description: "Match to job postings",
           icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" />, 
           color: "from-emerald-500 to-teal-600" 
         },
         { 
           title: "Resumes Created", 
-          value: "0", 
+          value: "3", 
           description: "Total active resumes",
           icon: <FileText className="h-5 w-5 text-violet-500" />, 
           color: "from-violet-500 to-purple-600" 
         },
         { 
           title: "Cover Letters", 
-          value: "0", 
+          value: "1", 
           description: "Generated cover letters",
           icon: <FileEdit className="h-5 w-5 text-amber-500" />, 
           color: "from-amber-500 to-orange-600" 
         },
       ]);
-      setRecentActivitiesData([]); // Initially empty
-      setUpcomingTasksData([]); // Initially empty
-      setResumeStrength({ keywords: 0, experience: 0, skills: 0, readability: 0 });
-      setIsLoading(false);
-    }, 1500); // Simulate network delay
-    return () => clearTimeout(timer);
+      setUpcomingTasksData([
+        {
+          title: "Follow up with Acme Corp",
+          description: "Send a thank you email after interview.",
+          dueDate: "Tomorrow"
+        },
+        {
+          title: "Update LinkedIn Profile",
+          description: "Add new skills and projects.",
+          dueDate: "End of week"
+        }
+      ]);
+      setResumeStrength({ keywords: 85, experience: 70, skills: 90, readability: 75 });
+      setRecentActivitiesData([
+        {
+            id: "initial-mock-1",
+            title: "Uploaded Resume 'Initial_Mock_Resume.pdf'",
+            description: "Your resume was successfully uploaded (initial mock).",
+            date: new Date(Date.now() - 1000 * 60 * 60 * 1).toLocaleString(), // 1 hour ago
+            icon: getActivityIcon('resume_upload'),
+            type: 'resume_upload'
+        },
+        {
+            id: "initial-mock-2",
+            title: "Analyzed 'Software_Engineer_Resume.docx'",
+            description: "Resume analysis complete, 85% score (initial mock).",
+            date: new Date(Date.now() - 1000 * 60 * 60 * 3).toLocaleString(), // 3 hours ago
+            icon: getActivityIcon('resume_analysis'),
+            type: 'resume_analysis'
+        }
+      ]);
+
+      try {
+        // Attempt to fetch real activities from the API
+        const response = await apiClient.get<ActivityData[]>('/activity/recent');
+        const fetchedActivities = response.data.map(act => ({
+          ...act,
+          date: new Date(act.date).toLocaleString(),
+          icon: getActivityIcon(act.type as ActivityData['type'])
+        }));
+        // If API succeeds, replace mock recent activities with real ones
+        if (fetchedActivities.length > 0) {
+            setRecentActivitiesData(fetchedActivities);
+        }
+        // If your API were to return data for other sections, you would update them here.
+
+      } catch (error) {
+        console.error("Failed to fetch real dashboard data; displaying initial mock data:", error);
+        // The initial mock data set above will be used if the API call fails.
+      } finally {
+        // Crucially, set isLoading to false AFTER all data (mock or real) is processed.
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   // Quick actions (considered static configuration, not mock data to be removed)
@@ -246,8 +335,8 @@ export default function DashboardHome() {
                 </div>
               ) : recentActivitiesData.length > 0 ? (
                 <div className="space-y-4">
-                  {recentActivitiesData.map((activity, index) => (
-                    <div key={index} className="flex items-start p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                  {recentActivitiesData.map((activity) => (
+                    <div key={activity.id} className="flex items-start p-3 hover:bg-gray-50 rounded-lg transition-colors">
                       <div className="p-2 rounded-full bg-gray-100 mr-3">{activity.icon}</div>
                       <div>
                         <h4 className="font-medium text-gray-900">{activity.title}</h4>
@@ -398,6 +487,19 @@ export default function DashboardHome() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Button to add mock data */}
+      <div className="mt-8 flex justify-center">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={addMockActivity}
+          className="text-xs text-gray-600 hover:bg-gray-100"
+        >
+          <PlusCircle size={14} className="mr-1.5" />
+          Add Mock Activity (Dev)
+        </Button>
       </div>
     </div>
   );

@@ -34,7 +34,7 @@ const Home = () => {
 
   const handleButtonClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    navigate("/login");
+    navigate("/dashboard");
   };
 
   return (
@@ -85,24 +85,24 @@ const Home = () => {
                   <span className="relative z-10">optimized</span>
                   <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-100 -z-10"></span>
                 </span> resume
-              </h1>
+            </h1>
               
               <p className="text-xl text-slate-600 mb-8 leading-relaxed">
                 Our AI analyzes your resume against job requirements to maximize your chances of getting noticed by both hiring managers and ATS systems.
-              </p>
+            </p>
               
               <div className="flex flex-col sm:flex-row gap-4 mb-10">
-                <Button 
-                  size="lg"
-                  onClick={handleButtonClick}
+              <Button 
+                size="lg" 
+                onClick={handleButtonClick}
                   className="bg-blue-600 hover:bg-blue-700 text-white rounded-full h-14 px-8 transition-all"
-                >
+              >
                   <span className="mr-2">Start Optimizing</span>
                   <ArrowRight size={18} />
-                </Button>
+              </Button>
                 
                 <button 
-                  onClick={handleButtonClick}
+                onClick={handleButtonClick}
                   className="text-slate-700 hover:text-blue-600 font-medium flex items-center transition-colors"
                 >
                   See how it works <ChevronRight size={16} className="ml-1" />
@@ -240,7 +240,7 @@ const Home = () => {
           </div>
         </div>
       </section>
-      
+
       {/* Features Section */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-6">
@@ -251,9 +251,9 @@ const Home = () => {
               </h2>
               <p className="text-xl text-slate-600 max-w-2xl mx-auto">
                 Our intelligent platform makes it easy to create an interview-winning resume.
-              </p>
-            </div>
-            
+            </p>
+          </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {/* Feature 1 */}
               <div className="reveal fade-bottom delay-300">
@@ -288,8 +288,8 @@ const Home = () => {
                 <div className="bg-slate-50 rounded-2xl p-8 h-full transition-all duration-300 hover:shadow-md hover:-translate-y-1">
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-6">
                     <span className="text-lg font-bold">3</span>
-                  </div>
-                  
+          </div>
+
                   <h3 className="text-xl font-bold text-slate-900 mb-3">Optimize & Download</h3>
                   <p className="text-slate-600">
                     Apply AI suggestions to improve your resume and download in any format.
@@ -300,7 +300,7 @@ const Home = () => {
           </div>
         </div>
       </section>
-      
+
       {/* Testimonial Section - Redesigned */}
       <section className="py-24 bg-white relative">
         {/* Background texture */}
@@ -318,7 +318,7 @@ const Home = () => {
               <rect width="100%" height="100%" filter="url(#testimonialNoise)" />
             </svg>
           </div>
-          
+
           {/* Gradient spots */}
           <div className="absolute top-20 left-20 w-96 h-96 rounded-full bg-blue-50 opacity-40 blur-3xl"></div>
           <div className="absolute bottom-20 right-20 w-96 h-96 rounded-full bg-blue-50 opacity-40 blur-3xl"></div>
@@ -466,7 +466,7 @@ const Home = () => {
           </div>
         </div>
       </section>
-      
+
       {/* CTA Section */}
       <section className="py-24 bg-blue-600 text-white">
         <div className="container mx-auto px-6">
@@ -484,7 +484,7 @@ const Home = () => {
             >
               <span className="mr-2">Get Started Free</span>
               <ArrowRight size={18} />
-            </Button>
+          </Button>
           </div>
         </div>
       </section>

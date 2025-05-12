@@ -1,18 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogIn, Quote, CircleDashed } from 'lucide-react';
+import { LogIn, Quote } from 'lucide-react';
 import { toast } from "sonner";
 import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { useAuth } from '@/context/AuthContext';
+import { Loader } from '@/components/ui/loader';
 
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const { user } = useAuth();
+    const [redirectPath, setRedirectPath] = useState('/dashboard');
+
+    useEffect(() => {
+        const savedPath = localStorage.getItem('authRedirectPath');
+        if (savedPath) {
+            setRedirectPath(savedPath);
+            localStorage.removeItem('authRedirectPath');
+        }
+    }, []);
+
+    useEffect(() => {
+        if (user) {
+            navigate(redirectPath);
+        }
+    }, [user, navigate, redirectPath]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -41,6 +59,7 @@ const LoginPage: React.FC = () => {
 
     return (
         <>
+            {isLoading && <Loader fullScreen />}
             <div className="min-h-[calc(100vh-80px)] flex">
                 <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 md:p-12">
                     <div className="w-full max-w-md space-y-6">
@@ -87,8 +106,8 @@ const LoginPage: React.FC = () => {
                                 className="w-full text-lg py-3 bg-theme-blue hover:bg-theme-blue/90 text-white mt-6"
                                 disabled={isLoading}
                             >
-                                {isLoading ? <CircleDashed className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
-                                {isLoading ? 'Signing In...' : 'Sign In'}
+                                <LogIn className="mr-2 h-5 w-5" />
+                                Sign In
                             </Button>
                         </form>
                     </div>

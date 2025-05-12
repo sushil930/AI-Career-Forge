@@ -25,6 +25,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true); // Start loading until initial check is done
 
+    // Try to restore token from localStorage on mount
+    useEffect(() => {
+        const storedToken = localStorage.getItem('firebaseIdToken');
+        if (storedToken) {
+            console.log('[AuthContext] Token found in localStorage on init');
+            setToken(storedToken);
+            // Note: We still wait for onAuthStateChanged to set the user object
+        }
+    }, []);
+
     useEffect(() => {
         // Subscribe to Firebase auth state changes
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -33,11 +43,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 // User is signed in
                 setUser(firebaseUser);
                 try {
-                    const idToken = await getIdToken(firebaseUser);
+                    const idToken = await getIdToken(firebaseUser, true); // Force refresh token
                     setToken(idToken);
-                    // Optionally store token in localStorage for persistence across refreshes
+                    // Store token in localStorage for persistence across refreshes
                     localStorage.setItem('firebaseIdToken', idToken);
-                    console.log('[AuthContext] Token set.');
+                    console.log('[AuthContext] Token set and stored in localStorage');
                 } catch (error) {
                     console.error('[AuthContext] Error getting ID token:', error);
                     setToken(null);
@@ -48,7 +58,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 setUser(null);
                 setToken(null);
                 localStorage.removeItem('firebaseIdToken');
-                console.log('[AuthContext] User signed out, token removed.');
+                console.log('[AuthContext] User signed out, token removed from state and localStorage');
             }
             setIsLoading(false); // Initial check complete
         });
@@ -57,14 +67,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return () => unsubscribe();
     }, []);
 
+    // Set up token refresh interval (e.g., every 55 minutes - Firebase tokens expire after 1 hour)
+    useEffect(() => {
+        if (!user) return; // Only set up refresh for authenticated users
+        
+        const REFRESH_INTERVAL = 55 * 60 * 1000; // 55 minutes in milliseconds
+        
+        const intervalId = setInterval(async () => {
+            try {
+                console.log('[AuthContext] Refreshing Firebase ID token');
+                const freshToken = await getIdToken(user, true); // Force token refresh
+                setToken(freshToken);
+                localStorage.setItem('firebaseIdToken', freshToken);
+                console.log('[AuthContext] Token refreshed successfully');
+            } catch (error) {
+                console.error('[AuthContext] Failed to refresh token:', error);
+            }
+        }, REFRESH_INTERVAL);
+        
+        return () => clearInterval(intervalId);
+    }, [user]);
+
     // Logout function
     const logout = async () => {
         console.log('[AuthContext] Logging out...');
         try {
             await signOut(auth);
             // State updates (user, token) will be handled by the onAuthStateChanged listener
-            // No need to manually set user/token to null here
-            localStorage.removeItem('firebaseIdToken'); // Explicitly clear storage on logout action
+            // Explicitly clear storage on logout action
+            localStorage.removeItem('firebaseIdToken');
+            // Force state update for immediate UI response
+            setUser(null);
+            setToken(null);
         } catch (error) {
             console.error('[AuthContext] Error signing out:', error);
             // Handle logout error (e.g., show toast)

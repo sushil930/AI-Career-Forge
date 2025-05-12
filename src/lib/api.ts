@@ -16,7 +16,6 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  // We can add interceptors later to automatically attach the auth token
 });
 
 // Request interceptor to attach Firebase ID Token
@@ -27,9 +26,9 @@ apiClient.interceptors.request.use(
     if (token) {
       // Attach the token as a Bearer token to the Authorization header
       config.headers.Authorization = `Bearer ${token}`;
-      // console.log('[API Interceptor] Token attached:', token.substring(0, 10) + '...'); // Uncomment for debugging
+      console.log('[API Interceptor] Token attached to request');
     } else {
-      // console.log('[API Interceptor] No token found in localStorage.'); // Uncomment for debugging
+      console.log('[API Interceptor] No token found in localStorage.');
     }
     return config;
   },
@@ -40,21 +39,52 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Optional: Add a response interceptor for global error handling
-/*
+// Add a response interceptor for global error handling
 apiClient.interceptors.response.use(
   (response) => response, // Return successful responses directly
   (error) => {
-    // Handle common errors globally (e.g., 401 Unauthorized)
-    if (error.response && error.response.status === 401) {
-      // Handle unauthorized access, e.g., redirect to login
-      console.error("Unauthorized access - redirecting to login...");
-      // window.location.href = '/login'; 
+    // Handle common errors globally
+    if (error.response) {
+      const { status } = error.response;
+      
+      if (status === 401) {
+        console.error("[API Interceptor] 401 Unauthorized response");
+        
+        // Don't redirect from login page
+        const isOnAuthPage = window.location.pathname.includes('/login') || 
+                             window.location.pathname.includes('/signup');
+        
+        // Check if user was previously logged in
+        const hadToken = localStorage.getItem('firebaseIdToken');
+        
+        if (hadToken && !isOnAuthPage) {
+          console.log("[API Interceptor] Token invalid or expired. Clearing localStorage.");
+          localStorage.removeItem('firebaseIdToken');
+          
+          // Avoid redirecting if already on an auth page
+          if (!isOnAuthPage) {
+            console.log("[API Interceptor] Redirecting to login...");
+            // Store the current location to redirect back after login
+            localStorage.setItem('authRedirectPath', window.location.pathname);
+            window.location.href = '/login';
+          }
+        }
+      } else if (status === 403) {
+        console.error("[API Interceptor] 403 Forbidden - User doesn't have sufficient permissions");
+      } else if (status >= 500) {
+        console.error("[API Interceptor] Server error:", status, error.response.data);
+      }
+    } else if (error.request) {
+      // Request was made but no response was received
+      console.error("[API Interceptor] Network error - no response received:", error.request);
+    } else {
+      // Something else happened while setting up the request
+      console.error("[API Interceptor] Error:", error.message);
     }
+    
     // Always reject the promise for specific error handling in components
     return Promise.reject(error);
   }
 );
-*/
 
 export default apiClient; 

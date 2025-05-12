@@ -18,6 +18,7 @@ import DashboardHome from "./pages/dashboard/DashboardHome";
 import CoverLetterGenerator from "./pages/dashboard/CoverLetterGenerator";
 import MyResumes from "./pages/dashboard/MyResumes";
 import HelpAndTips from "./pages/dashboard/HelpAndTips";
+import PageRefresh from "./components/PageRefresh";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <PageRefresh />
         <Routes>
           {/* Main site routes */}
           <Route

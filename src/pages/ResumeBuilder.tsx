@@ -1,14 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CircleDashed, Trash2, Plus, TestTube2 } from "lucide-react";
+import { CircleDashed, Trash2, Plus, TestTube2, FileText, CheckCircle, ChevronRight, ChevronLeft, Download, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import apiClient from "@/lib/api";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { motion } from "framer-motion";
 
 interface ResumeInputData {
   personalInfo: {
@@ -194,12 +197,32 @@ const ResumeBuilder = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedText, setGeneratedText] = useState<string | null>(null);
   const [generatedResumeId, setGeneratedResumeId] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    let filled = 0;
+    let total = 7;
+    
+    if (userInfo.personalInfo.name && userInfo.personalInfo.email) filled++;
+    
+    if (userInfo.summary && userInfo.summary.length > 10) filled++;
+    
+    if (userInfo.experience[0]?.jobTitle && userInfo.experience[0]?.company) filled++;
+    
+    if (userInfo.education[0]?.institution && userInfo.education[0]?.degree) filled++;
+    
+    if (userInfo.skills[0]?.items.length > 0) filled++;
+    
+    if (userInfo.projects && userInfo.projects.length > 0) filled++;
+    
+    if (userInfo.certifications && userInfo.certifications.length > 0) filled++;
+    
+    setProgress(Math.round((filled / total) * 100));
+  }, [userInfo]);
 
   const handleFillWithMockData = () => {
     setUserInfo(mockResumeData);
     toast.info("Form filled with mock data. Feel free to edit!");
-    // Optionally, navigate to the first tab if not already there
-    // setActiveTab("personal"); 
   };
 
   const handleInputChange = (section: keyof ResumeInputData, field: string, value: any, index?: number) => {
@@ -361,339 +384,736 @@ const ResumeBuilder = () => {
 
   return (
     <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8 max-w-6xl">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Resume Builder</h1>
-          <p className="text-gray-600 mt-1">
-            Craft your perfect resume with our AI-powered assistant.
-          </p>
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="mb-8"
+      >
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Resume Builder</h1>
+            <p className="text-gray-600 mt-2 text-lg">
+              Craft your perfect resume with our AI-powered assistant
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button 
+              variant="outline" 
+              onClick={handleFillWithMockData} 
+              className="bg-gradient-to-r from-amber-50 to-amber-100 hover:from-amber-100 hover:to-amber-200 text-amber-700 border border-amber-300"
+            >
+              <TestTube2 className="mr-2 h-4 w-4" />
+              Fill with Example Data
+            </Button>
+            {!generatedText && (
+              <Button 
+                onClick={generateResumeContent}
+                disabled={isGenerating}
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+              >
+                {isGenerating ? (
+                  <>
+                    <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Generate Resume
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         </div>
-        <Button 
-          variant="outline" 
-          onClick={handleFillWithMockData} 
-          className="bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-300"
-        >
-          <TestTube2 className="mr-2 h-4 w-4" />
-          Fill with Mock Data
-        </Button>
-      </div>
+        
+        {!generatedText && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mb-6"
+          >
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium text-gray-500">Resume Completion</span>
+              <Badge variant="outline" className={progress === 100 ? "bg-green-100 text-green-800 border-green-300" : ""}>
+                {progress}%
+              </Badge>
+            </div>
+            <Progress value={progress} className="h-2" />
+          </motion.div>
+        )}
+      </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Panel: Form Inputs or Generated Preview */}
         {!generatedText ? (
-          <div className="lg:col-span-2"> {/* Ensures Form Card takes 2/3 width on large screens */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Build Your Resume</CardTitle>
-                <CardDescription>
-                  Fill out the form below to generate a professional resume
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="lg:col-span-2"
+          >
+            <Card className="overflow-hidden border-gray-200 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b">
+                <CardTitle className="text-gray-800">Build Your Resume</CardTitle>
+                <CardDescription className="text-gray-600">
+                  Fill out each section to create a professional resume
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-2 mb-8">
-                    <TabsTrigger value="personal">Personal</TabsTrigger>
-                    <TabsTrigger value="summary">Summary</TabsTrigger>
-                    <TabsTrigger value="experience">Experience</TabsTrigger>
-                    <TabsTrigger value="education">Education</TabsTrigger>
-                    <TabsTrigger value="skills">Skills</TabsTrigger>
-                    <TabsTrigger value="projects">Projects</TabsTrigger>
-                    <TabsTrigger value="certs">Certs</TabsTrigger>
+              <CardContent className="p-0">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <TabsList className="w-full rounded-none border-b bg-gray-50 px-2 py-0 h-auto flex flex-wrap">
+                    <TabsTrigger 
+                      value="personal" 
+                      className={`py-3 px-4 rounded-none border-b-2 ${activeTab === "personal" ? "border-blue-500" : "border-transparent"}`}
+                    >
+                      Personal Info
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="summary" 
+                      className={`py-3 px-4 rounded-none border-b-2 ${activeTab === "summary" ? "border-blue-500" : "border-transparent"}`}
+                    >
+                      Summary
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="experience" 
+                      className={`py-3 px-4 rounded-none border-b-2 ${activeTab === "experience" ? "border-blue-500" : "border-transparent"}`}
+                    >
+                      Experience
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="education" 
+                      className={`py-3 px-4 rounded-none border-b-2 ${activeTab === "education" ? "border-blue-500" : "border-transparent"}`}
+                    >
+                      Education
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="skills" 
+                      className={`py-3 px-4 rounded-none border-b-2 ${activeTab === "skills" ? "border-blue-500" : "border-transparent"}`}
+                    >
+                      Skills
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="projects" 
+                      className={`py-3 px-4 rounded-none border-b-2 ${activeTab === "projects" ? "border-blue-500" : "border-transparent"}`}
+                    >
+                      Projects
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="certs" 
+                      className={`py-3 px-4 rounded-none border-b-2 ${activeTab === "certs" ? "border-blue-500" : "border-transparent"}`}
+                    >
+                      Certifications
+                    </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="personal" className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="name">Full Name *</Label>
+                  <TabsContent value="personal" className="p-6 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="name" className="text-gray-700">Full Name <span className="text-red-500">*</span></Label>
                         <Input
                           id="name"
                           value={userInfo.personalInfo.name}
                           onChange={(e) => handleInputChange('personalInfo', "name", e.target.value)}
                           placeholder="John Doe"
+                          className="border-gray-300 focus:border-blue-400"
                         />
                       </div>
-                      <div>
-                        <Label htmlFor="email">Email *</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="email" className="text-gray-700">Email <span className="text-red-500">*</span></Label>
                         <Input
                           id="email"
                           type="email"
                           value={userInfo.personalInfo.email}
                           onChange={(e) => handleInputChange('personalInfo', "email", e.target.value)}
                           placeholder="john.doe@example.com"
+                          className="border-gray-300 focus:border-blue-400"
                         />
                       </div>
-                      <div>
-                        <Label htmlFor="phone">Phone Number</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="phone" className="text-gray-700">Phone Number</Label>
                         <Input
                           id="phone"
                           value={userInfo.personalInfo.phone}
                           onChange={(e) => handleInputChange('personalInfo', "phone", e.target.value)}
                           placeholder="(123) 456-7890"
+                          className="border-gray-300 focus:border-blue-400"
                         />
                       </div>
-                      <div>
-                        <Label htmlFor="linkedin">LinkedIn Profile URL</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="linkedin" className="text-gray-700">LinkedIn Profile</Label>
                         <Input
                           id="linkedin"
                           value={userInfo.personalInfo.linkedin}
                           onChange={(e) => handleInputChange('personalInfo', "linkedin", e.target.value)}
-                          placeholder="linkedin.com/in/yourprofile"
+                          placeholder="linkedin.com/in/johndoe"
+                          className="border-gray-300 focus:border-blue-400"
                         />
                       </div>
-                      <div>
-                        <Label htmlFor="portfolio">Portfolio URL</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="portfolio" className="text-gray-700">Portfolio URL</Label>
                         <Input
                           id="portfolio"
                           value={userInfo.personalInfo.portfolio}
                           onChange={(e) => handleInputChange('personalInfo', "portfolio", e.target.value)}
-                          placeholder="yourportfolio.com"
+                          placeholder="johndoe.com"
+                          className="border-gray-300 focus:border-blue-400"
                         />
                       </div>
-                      <div>
-                        <Label htmlFor="address">Address</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="address" className="text-gray-700">Location</Label>
                         <Input
                           id="address"
                           value={userInfo.personalInfo.address}
                           onChange={(e) => handleInputChange('personalInfo', "address", e.target.value)}
-                          placeholder="City, State (Optional)"
+                          placeholder="City, State"
+                          className="border-gray-300 focus:border-blue-400"
                         />
                       </div>
                     </div>
-                    <div className="flex justify-end mt-6">
-                      <Button onClick={handleNextTab}>Next: Summary</Button>
+                    <div className="pt-4 flex justify-end">
+                      <Button 
+                        onClick={handleNextTab}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        Next: Summary <ChevronRight className="ml-1 h-4 w-4" />
+                      </Button>
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="summary" className="space-y-4">
-                    <div>
-                      <Label htmlFor="summary">Professional Summary / Objective</Label>
+                  <TabsContent value="summary" className="p-6 space-y-6">
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <Label htmlFor="summary" className="text-gray-700 font-medium">Professional Summary</Label>
+                        <Badge variant="outline" className="ml-2 text-xs bg-blue-50 text-blue-700 border-blue-200">Recommended</Badge>
+                      </div>
+                      <p className="text-sm text-gray-500">Write a concise overview of your professional background, key skills, and career goals.</p>
                       <Textarea
                         id="summary"
                         value={userInfo.summary}
                         onChange={(e) => handleInputChange('summary', 'summary', e.target.value)}
-                        placeholder="Optional: A brief summary of your skills and career goals..."
-                        rows={5}
+                        placeholder="A motivated professional with 5+ years of experience in..."
+                        rows={6}
+                        className="border-gray-300 focus:border-blue-400 resize-none"
                       />
                     </div>
-                    <div className="flex justify-between mt-6">
-                      <Button variant="outline" onClick={handlePrevTab}>Previous: Personal</Button>
-                      <Button onClick={handleNextTab}>Next: Experience</Button>
+                    <div className="pt-4 flex justify-between">
+                      <Button variant="outline" onClick={handlePrevTab}>
+                        <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+                      </Button>
+                      <Button 
+                        onClick={handleNextTab}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        Next: Experience <ChevronRight className="ml-1 h-4 w-4" />
+                      </Button>
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="experience" className="space-y-6">
+                  <TabsContent value="experience" className="p-6 space-y-6">
                     {userInfo.experience.map((exp, index) => (
-                      <Card key={index} className="p-4 border relative">
-                        <CardHeader className="p-2">
-                          <CardTitle className="text-lg">Experience #{index + 1}</CardTitle>
+                      <Card key={index} className="p-0 border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                        <CardHeader className="p-4 bg-gray-50">
+                          <div className="flex justify-between items-center">
+                            <CardTitle className="text-base font-medium flex items-center">
+                              <FileText className="h-4 w-4 mr-2 text-blue-500" />
+                              Experience {index + 1}
+                              {exp.jobTitle && exp.company ? (
+                                <Badge variant="secondary" className="ml-2 bg-green-50 text-green-600 border-0">
+                                  <CheckCircle className="h-3 w-3 mr-1" /> Complete
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="ml-2 text-amber-600 bg-amber-50 border-amber-200">Required</Badge>
+                              )}
+                            </CardTitle>
+                            {userInfo.experience.length > 1 && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => removeExperienceBlock(index)}
+                              >
+                                <Trash2 size={14} className="mr-1" /> Remove
+                              </Button>
+                            )}
+                          </div>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="p-4 space-y-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <Label htmlFor={`jobTitle-${index}`}>Job Title *</Label>
+                            <div className="space-y-2">
+                              <Label htmlFor={`jobTitle-${index}`} className="text-gray-700">Job Title <span className="text-red-500">*</span></Label>
                               <Input
                                 id={`jobTitle-${index}`}
                                 value={exp.jobTitle}
                                 onChange={(e) => handleInputChange('experience', "jobTitle", e.target.value, index)}
                                 placeholder="Software Engineer"
+                                className="border-gray-300 focus:border-blue-400"
                               />
                             </div>
-                            <div>
-                              <Label htmlFor={`company-${index}`}>Company *</Label>
+                            <div className="space-y-2">
+                              <Label htmlFor={`company-${index}`} className="text-gray-700">Company <span className="text-red-500">*</span></Label>
                               <Input
                                 id={`company-${index}`}
                                 value={exp.company}
                                 onChange={(e) => handleInputChange('experience', "company", e.target.value, index)}
-                                placeholder="Tech Corp"
+                                placeholder="Tech Company Inc."
+                                className="border-gray-300 focus:border-blue-400"
                               />
                             </div>
-                            <div>
-                              <Label htmlFor={`location-${index}`}>Location</Label>
+                            <div className="space-y-2">
+                              <Label htmlFor={`location-${index}`} className="text-gray-700">Location</Label>
                               <Input
                                 id={`location-${index}`}
                                 value={exp.location}
                                 onChange={(e) => handleInputChange('experience', "location", e.target.value, index)}
-                                placeholder="City, State (Optional)"
+                                placeholder="San Francisco, CA"
+                                className="border-gray-300 focus:border-blue-400"
                               />
                             </div>
-                            <div>
-                              <Label htmlFor={`startDate-${index}`}>Start Date *</Label>
-                              <Input
-                                id={`startDate-${index}`}
-                                value={exp.startDate}
-                                onChange={(e) => handleInputChange('experience', "startDate", e.target.value, index)}
-                                placeholder="YYYY-MM"
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor={`endDate-${index}`}>End Date *</Label>
-                              <Input
-                                id={`endDate-${index}`}
-                                value={exp.endDate}
-                                onChange={(e) => handleInputChange('experience', "endDate", e.target.value, index)}
-                                placeholder="YYYY-MM or Present"
-                              />
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-2">
+                                <Label htmlFor={`startDate-${index}`} className="text-gray-700">Start Date</Label>
+                                <Input
+                                  id={`startDate-${index}`}
+                                  value={exp.startDate}
+                                  onChange={(e) => handleInputChange('experience', "startDate", e.target.value, index)}
+                                  placeholder="YYYY-MM"
+                                  className="border-gray-300 focus:border-blue-400"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor={`endDate-${index}`} className="text-gray-700">End Date</Label>
+                                <Input
+                                  id={`endDate-${index}`}
+                                  value={exp.endDate}
+                                  onChange={(e) => handleInputChange('experience', "endDate", e.target.value, index)}
+                                  placeholder="YYYY-MM"
+                                  className="border-gray-300 focus:border-blue-400"
+                                />
+                              </div>
                             </div>
                           </div>
-                          <div>
-                            <Label htmlFor={`responsibilities-${index}`}>Responsibilities / Achievements *</Label>
-                            <ul className="space-y-1 mt-1 mb-2">
-                              {exp.responsibilities?.map((resp, rIndex) => (
-                                <li key={rIndex} className="text-sm flex items-center">
-                                  <span className="mr-2">•</span>{resp}
-                                  <Button variant="ghost" size="icon" className="h-5 w-5 ml-2 text-red-500" onClick={() => removeResponsibility(index, rIndex)}><Trash2 size={14} /></Button>
-                                </li>
-                              ))}
-                            </ul>
+                          <div className="space-y-3">
+                            <Label htmlFor={`responsibilities-${index}`} className="text-gray-700">Responsibilities & Achievements</Label>
+                            {exp.responsibilities?.length > 0 && (
+                              <ul className="space-y-2 mt-2 mb-4">
+                                {exp.responsibilities?.map((resp, rIndex) => (
+                                  <motion.li 
+                                    key={rIndex} 
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="text-sm flex items-center bg-gray-50 px-3 py-2 rounded-md border border-gray-200"
+                                  >
+                                    <span className="mr-2 text-blue-500">•</span>{resp}
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-6 w-6 ml-auto text-red-400 hover:text-red-600 hover:bg-red-50" 
+                                      onClick={() => removeResponsibility(index, rIndex)}
+                                    >
+                                      <Trash2 size={14} />
+                                    </Button>
+                                  </motion.li>
+                                ))}
+                              </ul>
+                            )}
                             <div className="flex gap-2">
                               <Input
                                 id={`responsibilities-${index}`}
-                                value={index === userInfo.experience.length - 1 ? respInput : ""}
+                                value={respInput}
                                 onChange={(e) => setRespInput(e.target.value)}
-                                placeholder="Add a responsibility/achievement..."
-                                className="flex-grow"
+                                placeholder="Developed a feature that increased user engagement by 20%..."
+                                className="flex-grow border-gray-300 focus:border-blue-400"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && respInput.trim()) {
+                                    e.preventDefault();
+                                    addResponsibility(index);
+                                  }
+                                }}
                               />
-                              <Button type="button" variant="secondary" onClick={() => addResponsibility(index)}>Add</Button>
+                              <Button 
+                                type="button" 
+                                variant="secondary" 
+                                onClick={() => addResponsibility(index)}
+                                className="bg-blue-100 hover:bg-blue-200 text-blue-700"
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add
+                              </Button>
                             </div>
                           </div>
                         </CardContent>
-                        {userInfo.experience.length > 1 && (
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            className="absolute top-2 right-2"
-                            onClick={() => removeExperienceBlock(index)}
-                          >
-                            <Trash2 size={14} /> Remove Exp #{index + 1}
-                          </Button>
-                        )}
                       </Card>
                     ))}
-                    <Button variant="outline" onClick={addExperienceBlock}>+ Add Another Experience</Button>
-                    <div className="flex justify-between mt-6">
-                      <Button variant="outline" onClick={handlePrevTab}>Previous: Summary</Button>
-                      <Button onClick={handleNextTab}>Next: Education</Button>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="education" className="space-y-4">
-                    <p>(Education form fields go here)</p>
-                    <div className="flex justify-between mt-6">
-                      <Button variant="outline" onClick={handlePrevTab}>Previous: Experience</Button>
-                      <Button onClick={handleNextTab}>Next: Skills</Button>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="skills" className="space-y-4">
-                    {userInfo.skills.map((skillSet, index) => (
-                      <Card key={index} className="p-4 border relative">
-                        <Label htmlFor={`skillCat-${index}`}>Skill Category</Label>
-                        <Input
-                          id={`skillCat-${index}`}
-                          value={skillSet.category}
-                          onChange={(e) => handleInputChange('skills', 'category', e.target.value, index)}
-                          placeholder="e.g., Programming Languages, Software, Soft Skills"
-                          className="mb-2"
-                        />
-                        <Label htmlFor={`skills-${index}`}>Skills *</Label>
-                        <ul className="space-y-1 mt-1 mb-2 min-h-[20px]">
-                          {skillSet.items?.map((item, itemIndex) => (
-                            <li key={itemIndex} className="text-sm flex items-center bg-gray-100 px-2 py-1 rounded">
-                              {item}
-                              <Button variant="ghost" size="icon" className="h-5 w-5 ml-auto text-red-500" onClick={() => removeSkill(index, itemIndex)}><Trash2 size={14} /></Button>
-                            </li>
-                          ))}
-                        </ul>
-                        <div className="flex gap-2">
-                          <Input
-                            id={`skills-${index}`}
-                            value={skillInput}
-                            onChange={(e) => setSkillInput(e.target.value)}
-                            placeholder="Add a skill (e.g., Python, React)"
-                            className="flex-grow"
-                          />
-                          <Button type="button" variant="secondary" onClick={() => addSkill(index)}>Add Skill</Button>
-                        </div>
-                      </Card>
-                    ))}
-                    <Button variant="outline" onClick={addSkillCategory} className="mt-4">
-                      <Plus className="mr-2 h-4 w-4" /> Add Skill Category
+                    <Button 
+                      variant="outline" 
+                      onClick={addExperienceBlock}
+                      className="border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 text-gray-600 hover:text-blue-600 w-full py-6"
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Add Another Experience
                     </Button>
-                    <div className="flex justify-between mt-6">
-                      <Button variant="outline" onClick={handlePrevTab}>Previous: Education</Button>
-                      <Button onClick={handleNextTab}>Next: Projects</Button>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="projects" className="space-y-4">
-                    <p>(Project form fields go here)</p>
-                    <div className="flex justify-between mt-6">
-                      <Button variant="outline" onClick={handlePrevTab}>Previous: Skills</Button>
-                      <Button onClick={handleNextTab}>Next: Certs</Button>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="certs" className="space-y-4">
-                    <p>(Certification form fields go here)</p>
-                    <div className="flex justify-between mt-6">
-                      <Button variant="outline" onClick={handlePrevTab}>Previous: Projects</Button>
-                      <Button
-                        onClick={generateResumeContent}
-                        disabled={isGenerating}
+                    <div className="pt-4 flex justify-between">
+                      <Button variant="outline" onClick={handlePrevTab}>
+                        <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+                      </Button>
+                      <Button 
+                        onClick={handleNextTab}
+                        className="bg-blue-600 hover:bg-blue-700"
                       >
-                        {isGenerating ? (
-                          <>
-                            <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
-                            Generating...
-                          </>
-                        ) : (
-                          "Generate Resume"
-                        )}
+                        Next: Education <ChevronRight className="ml-1 h-4 w-4" />
                       </Button>
                     </div>
                   </TabsContent>
 
+                  <TabsContent value="education" className="p-6 space-y-6">
+                    <div className="space-y-3">
+                      <Label htmlFor="institution" className="text-gray-700">Institution</Label>
+                      <Input
+                        id="institution"
+                        value={userInfo.education[0]?.institution}
+                        onChange={(e) => handleInputChange('education', 'institution', e.target.value, 0)}
+                        placeholder="University of Technology"
+                        className="border-gray-300 focus:border-blue-400"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="degree" className="text-gray-700">Degree</Label>
+                      <Input
+                        id="degree"
+                        value={userInfo.education[0]?.degree}
+                        onChange={(e) => handleInputChange('education', 'degree', e.target.value, 0)}
+                        placeholder="Master of Science"
+                        className="border-gray-300 focus:border-blue-400"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="fieldOfStudy" className="text-gray-700">Field of Study</Label>
+                      <Input
+                        id="fieldOfStudy"
+                        value={userInfo.education[0]?.fieldOfStudy}
+                        onChange={(e) => handleInputChange('education', 'fieldOfStudy', e.target.value, 0)}
+                        placeholder="Computer Science"
+                        className="border-gray-300 focus:border-blue-400"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="startDate" className="text-gray-700">Start Date</Label>
+                      <Input
+                        id="startDate"
+                        value={userInfo.education[0]?.startDate}
+                        onChange={(e) => handleInputChange('education', 'startDate', e.target.value, 0)}
+                        placeholder="YYYY-MM"
+                        className="border-gray-300 focus:border-blue-400"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="endDate" className="text-gray-700">End Date</Label>
+                      <Input
+                        id="endDate"
+                        value={userInfo.education[0]?.endDate}
+                        onChange={(e) => handleInputChange('education', 'endDate', e.target.value, 0)}
+                        placeholder="YYYY-MM"
+                        className="border-gray-300 focus:border-blue-400"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="details" className="text-gray-700">Details</Label>
+                      <Textarea
+                        id="details"
+                        value={userInfo.education[0]?.details?.join('\n') || ''}
+                        onChange={(e) => handleInputChange('education', 'details', e.target.value.split('\n'), 0)}
+                        placeholder="Thesis on Machine Learning applications in web development"
+                        rows={3}
+                        className="border-gray-300 focus:border-blue-400"
+                      />
+                    </div>
+                    <div className="pt-4 flex justify-between">
+                      <Button variant="outline" onClick={handlePrevTab}>
+                        <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+                      </Button>
+                      <Button 
+                        onClick={handleNextTab}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        Next: Skills <ChevronRight className="ml-1 h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="skills" className="p-6 space-y-6">
+                    {userInfo.skills.map((skillSet, index) => (
+                      <Card key={index} className="p-0 border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                        <CardHeader className="p-4 bg-gray-50">
+                          <div className="flex justify-between items-center">
+                            <CardTitle className="text-base font-medium flex items-center">
+                              <FileText className="h-4 w-4 mr-2 text-blue-500" />
+                              Skill Category {index + 1}
+                              {skillSet.items.length > 0 ? (
+                                <Badge variant="secondary" className="ml-2 bg-green-50 text-green-600 border-0">
+                                  <CheckCircle className="h-3 w-3 mr-1" /> Complete
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="ml-2 text-amber-600 bg-amber-50 border-amber-200">Required</Badge>
+                              )}
+                            </CardTitle>
+                            {userInfo.skills.length > 1 && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => removeSkill(index, 0)}
+                              >
+                                <Trash2 size={14} className="mr-1" /> Remove
+                              </Button>
+                            )}
+                          </div>
+                        </CardHeader>
+                        <CardContent className="p-4 space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor={`category-${index}`} className="text-gray-700">Category</Label>
+                            <Input
+                              id={`category-${index}`}
+                              value={skillSet.category}
+                              onChange={(e) => handleInputChange('skills', 'category', e.target.value, index)}
+                              placeholder="e.g., Programming Languages, Software, Soft Skills"
+                              className="border-gray-300 focus:border-blue-400"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor={`skills-${index}`} className="text-gray-700">Skills</Label>
+                            <Textarea
+                              id={`skills-${index}`}
+                              value={skillSet.items.join('\n') || ''}
+                              onChange={(e) => handleInputChange('skills', 'items', e.target.value.split('\n'), index)}
+                              placeholder="JavaScript, Python, React"
+                              rows={3}
+                              className="border-gray-300 focus:border-blue-400"
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    <Button 
+                      variant="outline" 
+                      onClick={addSkillCategory}
+                      className="border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 text-gray-600 hover:text-blue-600 w-full py-6"
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Add Another Skill Category
+                    </Button>
+                    <div className="pt-4 flex justify-between">
+                      <Button variant="outline" onClick={handlePrevTab}>
+                        <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+                      </Button>
+                      <Button 
+                        onClick={handleNextTab}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        Next: Projects <ChevronRight className="ml-1 h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="projects" className="p-6 space-y-6">
+                    <div className="space-y-3">
+                      <Label htmlFor="name" className="text-gray-700">Project Name</Label>
+                      <Input
+                        id="name"
+                        value={userInfo.projects?.[0]?.name || ''}
+                        onChange={(e) => handleInputChange('projects', 'name', e.target.value, 0)}
+                        placeholder="E-commerce Platform"
+                        className="border-gray-300 focus:border-blue-400"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="description" className="text-gray-700">Project Description</Label>
+                      <Textarea
+                        id="description"
+                        value={userInfo.projects?.[0]?.description || ''}
+                        onChange={(e) => handleInputChange('projects', 'description', e.target.value, 0)}
+                        placeholder="Developed a full-stack e-commerce platform with features like product listings, shopping cart, user authentication, and payment gateway integration."
+                        rows={3}
+                        className="border-gray-300 focus:border-blue-400"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="technologies" className="text-gray-700">Technologies Used</Label>
+                      <Textarea
+                        id="technologies"
+                        value={userInfo.projects?.[0]?.technologies?.join('\n') || ''}
+                        onChange={(e) => handleInputChange('projects', 'technologies', e.target.value.split('\n'), 0)}
+                        placeholder="JavaScript, Node.js, MongoDB, Stripe API"
+                        rows={3}
+                        className="border-gray-300 focus:border-blue-400"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="link" className="text-gray-700">Project URL</Label>
+                      <Input
+                        id="link"
+                        value={userInfo.projects?.[0]?.link || ''}
+                        onChange={(e) => handleInputChange('projects', 'link', e.target.value, 0)}
+                        placeholder="github.com/alexjohnson/ecommerce-platform"
+                        className="border-gray-300 focus:border-blue-400"
+                      />
+                    </div>
+                    <div className="pt-4 flex justify-between">
+                      <Button variant="outline" onClick={handlePrevTab}>
+                        <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+                      </Button>
+                      <Button 
+                        onClick={handleNextTab}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        Next: Certifications <ChevronRight className="ml-1 h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="certs" className="p-6 space-y-6">
+                    <div className="space-y-3">
+                      <Label htmlFor="name" className="text-gray-700">Certification Name</Label>
+                      <Input
+                        id="name"
+                        value={userInfo.certifications?.[0]?.name || ''}
+                        onChange={(e) => handleInputChange('certifications', 'name', e.target.value, 0)}
+                        placeholder="AWS Certified Solutions Architect - Associate"
+                        className="border-gray-300 focus:border-blue-400"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="issuingOrganization" className="text-gray-700">Issuing Organization</Label>
+                      <Input
+                        id="issuingOrganization"
+                        value={userInfo.certifications?.[0]?.issuingOrganization || ''}
+                        onChange={(e) => handleInputChange('certifications', 'issuingOrganization', e.target.value, 0)}
+                        placeholder="Amazon Web Services"
+                        className="border-gray-300 focus:border-blue-400"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="dateObtained" className="text-gray-700">Date Obtained</Label>
+                      <Input
+                        id="dateObtained"
+                        value={userInfo.certifications?.[0]?.dateObtained || ''}
+                        onChange={(e) => handleInputChange('certifications', 'dateObtained', e.target.value, 0)}
+                        placeholder="2022-08-10"
+                        className="border-gray-300 focus:border-blue-400"
+                      />
+                    </div>
+                    <div className="pt-4 flex justify-between">
+                      <Button variant="outline" onClick={handlePrevTab}>
+                        <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+                      </Button>
+                      <Button 
+                        onClick={handleNextTab}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        Next: Projects <ChevronRight className="ml-1 h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TabsContent>
                 </Tabs>
               </CardContent>
             </Card>
-          </div>
+          </motion.div>
         ) : (
-          <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Generated Resume</CardTitle>
-                <CardDescription>
-                  Review the AI-generated text below.
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="lg:col-span-2 space-y-6"
+          >
+            <Card className="overflow-hidden border-gray-200 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-b">
+                <CardTitle className="flex items-center">
+                  <FileText className="h-5 w-5 mr-2" /> Generated Resume
+                </CardTitle>
+                <CardDescription className="text-blue-100">
+                  Review your AI-generated resume content below
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[60vh] w-full rounded-md border p-4 whitespace-pre-wrap font-mono text-sm">
-                  {generatedText}
+              <CardContent className="p-0">
+                <ScrollArea className="h-[60vh] w-full p-6 font-mono text-sm leading-relaxed">
+                  <div className="whitespace-pre-wrap">{generatedText}</div>
                 </ScrollArea>
               </CardContent>
             </Card>
-          </div>
+          </motion.div>
         )}
-        <div className="lg:col-span-1 space-y-4 mt-6 lg:mt-0">
-          <Card>
-            <CardHeader>
-              <CardTitle>Actions</CardTitle>
+
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="lg:col-span-1 space-y-6"
+        >
+          <Card className="overflow-hidden border-gray-200 shadow-lg">
+            <CardHeader className="bg-gradient-to-r from-gray-50 to-slate-50 border-b">
+              <CardTitle className="text-gray-800">Actions</CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col space-y-3">
-              <Button onClick={downloadResume}>Download Resume (PDF)</Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setGeneratedText(null);
-                  setGeneratedResumeId(null);
-                }}
-              >
-                Edit Information
-              </Button>
-              <Button variant="outline" disabled>Save Resume (Coming Soon)</Button>
+            <CardContent className="p-4">
+              <div className="flex flex-col space-y-3">
+                {generatedText ? (
+                  <>
+                    <Button 
+                      onClick={downloadResume}
+                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+                    >
+                      <Download className="mr-2 h-4 w-4" /> Download PDF
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setGeneratedText(null);
+                        setGeneratedResumeId(null);
+                      }}
+                      className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" /> Edit Information
+                    </Button>
+                  </>
+                ) : (
+                  <div className="text-center py-4 text-gray-500 italic">
+                    Generate your resume to see download options
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
-        </div>
+
+          <Card className="overflow-hidden border-gray-200 shadow-lg">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 border-b">
+              <CardTitle className="text-blue-800 text-base">Resume Writing Tips</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              <ul className="space-y-3 text-sm text-gray-600">
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 mr-2 text-green-500 mt-0.5 flex-shrink-0" />
+                  <span>Use action verbs like "achieved," "implemented," and "led" to describe your experience</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 mr-2 text-green-500 mt-0.5 flex-shrink-0" />
+                  <span>Quantify achievements with numbers when possible (e.g., "Increased sales by 20%")</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 mr-2 text-green-500 mt-0.5 flex-shrink-0" />
+                  <span>Tailor your resume to match the specific job description you're applying for</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 mr-2 text-green-500 mt-0.5 flex-shrink-0" />
+                  <span>Focus on your most recent and relevant experience</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 mr-2 text-green-500 mt-0.5 flex-shrink-0" />
+                  <span>Keep your resume concise and ideally under 2 pages</span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );
