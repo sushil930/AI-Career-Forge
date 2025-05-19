@@ -33,3 +33,6 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
         }
     }
 }; 
+
+// Export authenticateToken as requireAuth for consistency across the codebase
+export const requireAuth = authenticateToken; 

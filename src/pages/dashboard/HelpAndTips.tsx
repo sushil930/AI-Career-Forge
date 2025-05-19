@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, HelpCircle, PlayCircle, CircleDashed, AlertTriangle } from "lucide-react";
+import { CheckCircle2, HelpCircle, PlayCircle, CircleDashed, AlertTriangle, ExternalLink } from "lucide-react";
 import apiClient from "@/lib/api";
 import { toast } from "sonner";
 
@@ -12,10 +12,58 @@ interface Tip {
   content: string;
 }
 
+// Video tutorial data with actual YouTube content
+const videoTutorials = [
+  {
+    id: 1,
+    title: "How To Write A Resume in 2025",
+    description: "Step-by-step guide to craft a professional resume that gets noticed by recruiters",
+    embedId: "y8YH0Qbu5h4",
+    thumbnail: "https://img.youtube.com/vi/y8YH0Qbu5h4/hqdefault.jpg"
+  },
+  {
+    id: 2,
+    title: "Resume Tips That Get You Noticed",
+    description: "Learn expert tips to make your resume stand out from the competition",
+    embedId: "Tt08KmFfIYQ",
+    thumbnail: "https://img.youtube.com/vi/Tt08KmFfIYQ/hqdefault.jpg"
+  },
+  {
+    id: 3,
+    title: "ATS Resume Tips for 2025",
+    description: "How to make your resume pass today's Applicant Tracking Systems (ATS)",
+    embedId: "UtE0wZKBgMg",
+    thumbnail: "https://img.youtube.com/vi/UtE0wZKBgMg/hqdefault.jpg"
+  },
+  {
+    id: 4,
+    title: "Resume Design & Formatting in 2025",
+    description: "Modern resume formatting and design tips to make your resume visually appealing",
+    embedId: "vgwo0j0KoyU",
+    thumbnail: "https://img.youtube.com/vi/vgwo0j0KoyU/hqdefault.jpg"
+  }
+];
+
+// YouTube embed component
+const YouTubeEmbed = ({ embedId }: { embedId: string }) => {
+  return (
+    <div className="aspect-video w-full overflow-hidden rounded">
+      <iframe
+        src={`https://www.youtube.com/embed/${embedId}`}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+        title="Embedded youtube"
+        className="w-full h-full border-0"
+      />
+    </div>
+  );
+};
+
 export default function HelpAndTips() {
   const [tips, setTips] = useState<Tip[]>([]);
   const [isLoadingTips, setIsLoadingTips] = useState(false);
   const [tipsError, setTipsError] = useState<string | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTips = async () => {
@@ -152,21 +200,54 @@ export default function HelpAndTips() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {[1, 2, 3, 4].map((item) => (
-                  <div key={item} className="border rounded-lg overflow-hidden">
-                    <div className="aspect-video bg-gray-100 flex items-center justify-center">
-                      <PlayCircle className="h-12 w-12 text-theme-blue opacity-70" />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-medium">Resume Tutorial {item}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Learn how to craft a perfect resume that gets noticed by recruiters
-                      </p>
-                    </div>
+              {selectedVideo ? (
+                <div className="space-y-4">
+                  <YouTubeEmbed embedId={selectedVideo} />
+                  <div className="flex justify-between mt-4">
+                    <button 
+                      onClick={() => setSelectedVideo(null)}
+                      className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 transition-colors rounded-md flex items-center"
+                    >
+                      ← Back to videos
+                    </button>
+                    <a 
+                      href={`https://www.youtube.com/watch?v=${selectedVideo}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 text-sm bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors rounded-md flex items-center"
+                    >
+                      Watch on YouTube <ExternalLink className="ml-1 h-3 w-3" />
+                    </a>
                   </div>
-                ))}
-              </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {videoTutorials.map((video) => (
+                    <div 
+                      key={video.id} 
+                      className="border rounded-lg overflow-hidden cursor-pointer hover:shadow-md transition-shadow duration-300"
+                      onClick={() => setSelectedVideo(video.embedId)}
+                    >
+                      <div className="aspect-video bg-gray-100 relative group">
+                        <img 
+                          src={video.thumbnail} 
+                          alt={`Thumbnail for ${video.title}`} 
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity duration-300">
+                          <PlayCircle className="h-16 w-16 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-medium">{video.title}</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {video.description}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

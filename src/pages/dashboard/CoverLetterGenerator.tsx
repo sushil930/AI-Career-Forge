@@ -17,7 +17,8 @@ import {
   User,
   Briefcase,
   FileEdit,
-  Wand2
+  Wand2,
+  AlertTriangle
 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { Loader } from "@/components/ui/loader";
 import { Badge } from "@/components/ui/badge";
+import apiClient from "@/lib/api";
 
 // Animation variants
 const fadeIn = {
@@ -50,6 +52,7 @@ const templates = [
 ];
 
 export default function CoverLetterGenerator() {
+  const [resumes, setResumes] = useState([]);
   const [selectedResume, setSelectedResume] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -60,6 +63,28 @@ export default function CoverLetterGenerator() {
   const [activeTab, setActiveTab] = useState("create");
   const [editorMode, setEditorMode] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
+  const [error, setError] = useState(null);
+
+  // Fetch user's resumes on component mount
+  useEffect(() => {
+    const fetchResumes = async () => {
+      try {
+        const response = await apiClient.get('/resumes');
+        if (response.data && Array.isArray(response.data.resumes)) {
+          setResumes(response.data.resumes);
+        } else {
+          console.warn('Unexpected format for resumes:', response.data);
+          setResumes([]);
+        }
+      } catch (err) {
+        console.error("Error fetching resumes:", err);
+        toast.error("Failed to load your resumes");
+        setResumes([]);
+      }
+    };
+
+    fetchResumes();
+  }, []);
 
   // Simulated generation progress
   useEffect(() => {
@@ -90,8 +115,8 @@ export default function CoverLetterGenerator() {
     }
   }, [activeTab, coverLetter]);
 
-  // Mock function to simulate cover letter generation
-  const handleGenerate = () => {
+  // Function to generate cover letter using API
+  const handleGenerate = async () => {
     if (!selectedResume || !jobDescription) {
       toast.error("Please select a resume and enter a job description");
       return;
@@ -99,27 +124,38 @@ export default function CoverLetterGenerator() {
 
     setIsGenerating(true);
     setActiveTab("create");
+    setError(null);
+    setGenerationProgress(10); // Start progress indicator
     
-    setTimeout(() => {
-      const company = companyName || "[Company Name]";
-      const role = roleName || "[Position]";
+    try {
+      // Prepare the request payload
+      const payload = {
+        selectedResume,
+        jobDescription,
+        companyName,
+        roleName,
+        selectedTemplate
+      };
       
-      const mockCoverLetter = `Dear Hiring Manager,
-
-I am writing to express my interest in the ${role} role at ${company}. With my background in software development and experience in React and TypeScript, I believe I would be a valuable addition to your team.
-
-My expertise in building responsive web applications aligns perfectly with the requirements outlined in your job description. I am particularly excited about the opportunity to work on innovative projects and contribute to your company's mission.
-
-Thank you for considering my application. I look forward to the possibility of discussing how my skills and experience can benefit your organization.
-
-Sincerely,
-John Doe`;
-
-      setCoverLetter(mockCoverLetter);
+      // Call the backend API
+      const response = await apiClient.post('/cover-letter/generate', payload);
+      
+      if (response.data && response.data.generatedCoverLetter) {
+        setCoverLetter(response.data.generatedCoverLetter);
+        setActiveTab("view");
+        toast.success("Cover letter generated successfully!");
+      } else {
+        throw new Error("Unexpected API response format");
+      }
+    } catch (err) {
+      console.error("Error generating cover letter:", err);
+      const errorMessage = err.response?.data?.message || err.message || "Failed to generate cover letter";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
       setIsGenerating(false);
-      setActiveTab("view");
-      toast.success("Cover letter generated successfully!");
-    }, 3000);
+      setGenerationProgress(0); // Reset progress
+    }
   };
 
   const handleCopy = () => {
@@ -195,9 +231,17 @@ John Doe`;
                         <SelectValue placeholder="Select a resume" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="software-developer">Software Developer Resume</SelectItem>
-                        <SelectItem value="product-manager">Product Manager Resume</SelectItem>
-                        <SelectItem value="data-analyst">Data Analyst Resume</SelectItem>
+                        {resumes.length > 0 ? (
+                          resumes.map(resume => (
+                            <SelectItem key={resume.id} value={resume.id}>
+                              {resume.originalFilename || resume.title || `Resume ${resume.id.substring(0, 6)}`}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-resumes" disabled>
+                            No resumes available
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -309,6 +353,13 @@ John Doe`;
                             style={{ width: `${generationProgress}%` }}
                           ></div>
                         </div>
+                      </div>
+                    )}
+                    
+                    {error && (
+                      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm flex items-start">
+                        <AlertTriangle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+                        <span>{error}</span>
                       </div>
                     )}
                   </div>
