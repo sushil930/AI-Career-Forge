@@ -339,7 +339,7 @@ const ResumeBuilder = () => {
     setGeneratedResumeId(null);
 
     try {
-      const response = await apiClient.post('/builder/generate', userInfo);
+      const response = await apiClient.post('/api/builder/generate', userInfo);
 
       if (response.status === 201 && response.data.generatedText && response.data.generatedResumeId) {
         setGeneratedText(response.data.generatedText);
@@ -375,7 +375,7 @@ const ResumeBuilder = () => {
       return;
     }
 
-    const downloadUrl = `${apiClient.defaults.baseURL}/builder/download/${generatedResumeId}`;
+    const downloadUrl = `${apiClient.defaults.baseURL}/api/builder/download/${generatedResumeId}`;
     toast.info("Initiating PDF download...");
     console.log(`Attempting to download PDF from: ${downloadUrl}`);
 

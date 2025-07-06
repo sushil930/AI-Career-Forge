@@ -1,7 +1,9 @@
 import admin from 'firebase-admin';
 import dotenv from 'dotenv';
+import path from 'path';
 
-dotenv.config(); // Ensure env vars are loaded
+// Ensure env vars are loaded
+dotenv.config();
 
 let db: admin.firestore.Firestore;
 let auth: admin.auth.Auth;
@@ -12,15 +14,20 @@ try {
     if (!serviceAccountPath) {
         throw new Error('GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.');
     }
+
+    // Resolve absolute path in case relative path is provided
+    const resolvedPath = path.resolve(serviceAccountPath);
+
     // Check if already initialized (useful for hot-reloading environments)
     if (admin.apps.length === 0) {
         admin.initializeApp({
-            credential: admin.credential.cert(serviceAccountPath)
+            credential: admin.credential.cert(resolvedPath)
         });
         console.log('[firebase-config]: Firebase Admin SDK initialized successfully.');
     } else {
         console.log('[firebase-config]: Firebase Admin SDK already initialized.');
     }
+
     // Get the initialized services
     db = admin.firestore();
     auth = admin.auth();
@@ -28,9 +35,8 @@ try {
 } catch (error) {
     console.error('[firebase-config]: FATAL Error initializing Firebase Admin SDK:', error);
     // Optional: Rethrow or exit to prevent the app from starting in a broken state
-    // process.exit(1);
-    // Or handle it so controllers get undefined db/auth, which they should check
+    throw error;
 }
 
 // Export the initialized services
-export { db, auth }; 
+export { db, auth };

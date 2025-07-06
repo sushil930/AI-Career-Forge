@@ -91,7 +91,7 @@ const JobMatchPage = () => {
     formData.append('jobDescription', jobDescription);
 
     try {
-      const response = await apiClient.post('/match/resume-job', formData, {
+      const response = await apiClient.post('/api/match/resume-job', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

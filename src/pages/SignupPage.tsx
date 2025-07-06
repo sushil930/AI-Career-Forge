@@ -46,7 +46,7 @@ const SignupPage: React.FC = () => {
 
         setIsLoading(true);
         try {
-            const response = await apiClient.post('/auth/signup', {
+            const response = await apiClient.post('/api/auth/signup', {
                 email,
                 password,
                 displayName

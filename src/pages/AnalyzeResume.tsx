@@ -110,7 +110,7 @@ const AnalyzeResume = () => {
     formData.append('resumeFile', file);
 
     try {
-      const response = await apiClient.post('/resumes/upload', formData, {
+      const response = await apiClient.post('/api/resumes/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -150,7 +150,7 @@ const AnalyzeResume = () => {
 
     try {
       // Use the correct API response type here
-      const response = await apiClient.post<AnalyzeApiResponse>(`/resumes/${uploadedResumeId}/analyze`);
+      const response = await apiClient.post<AnalyzeApiResponse>(`/api/resumes/${uploadedResumeId}/analyze`);
 
       // Store the nested 'analysis' object from the response data
       if (response.status === 200 && response.data?.analysis) { // Check for response.data.analysis

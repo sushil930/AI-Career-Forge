@@ -69,7 +69,7 @@ export default function CoverLetterGenerator() {
   useEffect(() => {
     const fetchResumes = async () => {
       try {
-        const response = await apiClient.get('/resumes');
+        const response = await apiClient.get('/api/resumes');
         if (response.data && Array.isArray(response.data.resumes)) {
           setResumes(response.data.resumes);
         } else {
@@ -138,7 +138,7 @@ export default function CoverLetterGenerator() {
       };
       
       // Call the backend API
-      const response = await apiClient.post('/cover-letter/generate', payload);
+      const response = await apiClient.post('/api/cover-letter/generate', payload);
       
       if (response.data && response.data.generatedCoverLetter) {
         setCoverLetter(response.data.generatedCoverLetter);

@@ -70,7 +70,7 @@ export default function HelpAndTips() {
       setIsLoadingTips(true);
       setTipsError(null);
       try {
-        const response = await apiClient.get('/tips');
+        const response = await apiClient.get('/api/tips');
         if (response.data && Array.isArray(response.data.tips)) {
           setTips(response.data.tips);
         } else {
