@@ -175,7 +175,7 @@ export default function DashboardHome() {
 
       try {
         // Attempt to fetch real activities from the API
-        const response = await apiClient.get<ActivityData[]>('/activity/recent');
+        const response = await apiClient.get<ActivityData[]>('/api/activity/recent');
         const fetchedActivities = response.data.map(act => ({
           ...act,
           date: new Date(act.date).toLocaleString(),

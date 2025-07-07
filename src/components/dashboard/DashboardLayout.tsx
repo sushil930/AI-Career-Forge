@@ -19,12 +19,12 @@ export function DashboardLayout() {
   }
 
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider defaultOpen={false}>
       <div className="flex min-h-screen w-full">
         <DashboardSidebar />
         <SidebarInset className="flex flex-col">
           <TopNav />
-          <div className="flex-grow p-6">
+          <div className="flex-grow p-3 sm:p-4 md:p-6">
             <Outlet />
           </div>
         </SidebarInset>

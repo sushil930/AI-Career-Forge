@@ -1,28 +1,37 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Menu, X, ArrowRight } from 'lucide-react';
+import { Menu, X, ArrowRight, Home, FileText, ClipboardList, Briefcase } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { SignInPromptModal } from './SignInPromptModal';
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showSignInModal, setShowSignInModal] = useState(false);
   const { user, logout, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      setIsScrolled(window.scrollY > 10);
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMenuOpen]);
 
   const handleLogout = async () => {
     await logout();
@@ -116,104 +125,117 @@ export function Navbar() {
     return location.pathname === path ? "text-blue-600 font-medium" : "text-slate-600 hover:text-blue-600";
   };
 
+  const navLinks = [
+    { to: '/', text: 'Home', icon: <Home size={20} />, requiresAuth: false },
+    { to: '/analyze', text: 'Analyze Resume', icon: <FileText size={20} />, requiresAuth: false },
+    { to: '/builder', text: 'Resume Builder', icon: <ClipboardList size={20} />, requiresAuth: true },
+    { to: '/job-match', text: 'Job Match', icon: <Briefcase size={20} />, requiresAuth: true },
+  ];
+
+  const isHomePage = location.pathname === '/';
+
   return (
-    <nav className={`relative backdrop-blur-sm py-4 px-6 sticky top-0 z-40 transition-all duration-300 ${isScrolled ? 'shadow-md bg-white/90' : 'bg-white'}`}>
-      {/* Subtle texture overlay */}
-      <div className="absolute inset-0 -z-10 opacity-[0.03] pointer-events-none">
-        <svg width="100%" height="100%">
-          <filter id="noise">
-            <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch" />
-            <feColorMatrix type="saturate" values="0" />
-          </filter>
-          <rect width="100%" height="100%" filter="url(#noise)" />
-        </svg>
-      </div>
-      
-      <div className="container mx-auto flex justify-between items-center">
-        <Link to="/" className="flex items-center space-x-2 group">
-          <span className="font-bold text-2xl text-slate-900 group-hover:text-blue-600 transition-colors">
-            AI Resume Pro
-          </span>
-        </Link>
-
-        {/* Mobile menu button */}
-        <div className="md:hidden">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-slate-600 hover:text-blue-600 hover:bg-blue-50"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </Button>
+    <>
+      <nav className={`relative py-4 px-6 sticky top-0 z-40 transition-all duration-300 ${isScrolled || !isHomePage ? 'shadow-md bg-white/90 backdrop-blur-sm' : 'bg-transparent'}`}>
+        {/* Subtle texture overlay */}
+        <div className="absolute inset-0 -z-10 opacity-[0.03] pointer-events-none">
+          <svg width="100%" height="100%">
+            <filter id="noise">
+              <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch" />
+              <feColorMatrix type="saturate" values="0" />
+            </filter>
+            <rect width="100%" height="100%" filter="url(#noise)" />
+          </svg>
         </div>
+        
+        <div className="container mx-auto flex justify-between items-center">
+          <Link to="/" className="flex items-center space-x-2 group">
+            <span className="font-bold text-2xl text-slate-900 group-hover:text-blue-600 transition-colors">
+              AI Career Forge
+            </span>
+          </Link>
 
-        {/* Desktop menu */}
-        <div className="hidden md:flex items-center space-x-8">
-          <Link to="/" className={`${isActive("/")} transition-colors text-sm font-medium`}>
-            Home
-          </Link>
-          <Link to="/analyze" className={`${isActive("/analyze")} transition-colors text-sm font-medium`}>
-            Analyze Resume
-          </Link>
-          <Link to="/builder" className={`${isActive("/builder")} transition-colors text-sm font-medium`}>
-            Resume Builder
-          </Link>
-          <Link to="/job-match" className={`${isActive("/job-match")} transition-colors text-sm font-medium`}>
-            Job Match
-          </Link>
-          {renderAuthButtons()}
-        </div>
-      </div>
-
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="md:hidden fixed top-16 left-0 right-0 bottom-0 bg-white/95 backdrop-blur-md z-50 animate-in fade-in slide-in-from-top duration-300">
-          {/* Mobile texture overlay */}
-          <div className="absolute inset-0 -z-10 opacity-[0.02] pointer-events-none">
-            <svg width="100%" height="100%">
-              <filter id="mobileNoise">
-                <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="3" stitchTiles="stitch" />
-                <feColorMatrix type="saturate" values="0" />
-              </filter>
-              <rect width="100%" height="100%" filter="url(#mobileNoise)" />
-            </svg>
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-slate-600 hover:text-blue-600 hover:bg-blue-50"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </Button>
           </div>
-          <div className="container mx-auto py-8 px-6 flex flex-col space-y-6">
-            <Link
-              to="/"
-              className={`${isActive("/")} text-lg font-medium transition-colors`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Link
-              to="/analyze"
-              className={`${isActive("/analyze")} text-lg font-medium transition-colors`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Analyze Resume
-            </Link>
-            <Link
-              to="/builder"
-              className={`${isActive("/builder")} text-lg font-medium transition-colors`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Resume Builder
-            </Link>
-            <Link
-              to="/job-match"
-              className={`${isActive("/job-match")} text-lg font-medium transition-colors`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Job Match
-            </Link>
-            <div className="pt-4 mt-4 border-t border-slate-100">
+
+          {/* Desktop menu */}
+          <div className="hidden md:flex items-center space-x-8">
+            {navLinks.filter(link => !link.requiresAuth).map(link => (
+              <Link key={link.to} to={link.to} className={`${isActive(link.to)} transition-colors text-sm font-medium`}>
+                {link.text}
+              </Link>
+            ))}
+            {navLinks.filter(link => link.requiresAuth).map(link => (
+              <div
+                key={link.to}
+                onClick={() => {
+                  if (!user) {
+                    setShowSignInModal(true);
+                  } else {
+                    navigate(link.to);
+                  }
+                }}
+                className={`${isActive(link.to)} transition-colors text-sm font-medium cursor-pointer`}
+              >
+                {link.text}
+              </div>
+            ))}
+            {renderAuthButtons()}
+          </div>
+        </div>
+
+        {/* Mobile Menu Overlay */}
+        <div
+          className={`md:hidden fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ease-in-out ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          onClick={() => setIsMenuOpen(false)}
+        />
+
+        {/* Mobile Menu Drawer */}
+        <div
+          className={`md:hidden fixed top-0 right-0 h-full w-4/5 max-w-sm bg-gradient-to-b from-white to-slate-50 z-50 transform transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        >
+          <div className="p-6 flex flex-col h-full">
+            <div className="flex justify-between items-center mb-10">
+              <span className="font-bold text-xl text-slate-800">Navigation</span>
+              <Button variant="ghost" size="icon" className="text-slate-500 hover:bg-slate-200" onClick={() => setIsMenuOpen(false)}>
+                <X size={24} />
+              </Button>
+            </div>
+            <nav className="flex flex-col space-y-2">
+              {navLinks.map((link) => (
+                <div
+                  key={link.to}
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    if (link.requiresAuth && !user) {
+                      setShowSignInModal(true);
+                    } else {
+                      navigate(link.to);
+                    }
+                  }}
+                  className={`${isActive(link.to)} flex items-center space-x-4 p-3 rounded-lg transition-colors duration-200 hover:bg-blue-50 cursor-pointer`}
+                >
+                  <span className={isActive(link.to) === "text-blue-600 font-medium" ? "text-blue-600" : "text-slate-500"}>{link.icon}</span>
+                  <span className="text-lg">{link.text}</span>
+                </div>
+              ))}
+            </nav>
+            <div className="mt-auto pt-6 border-t border-slate-200 flex flex-col space-y-4">
               {renderMobileAuthButtons()}
             </div>
           </div>
         </div>
-      )}
-    </nav>
+      </nav>
+      <SignInPromptModal isOpen={showSignInModal} onClose={() => setShowSignInModal(false)} />
+    </>
   );
 }

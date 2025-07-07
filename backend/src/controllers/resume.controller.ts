@@ -18,12 +18,8 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" }); //
 // Placeholder for uploadResume function
 export const uploadResume = async (req: Request, res: Response): Promise<void> => {
     try {
-        // Check if user is authenticated (middleware should have handled this)
-        if (!req.user) {
-            res.status(401).json({ message: 'Unauthorized: User not authenticated' });
-            return;
-        }
-        const userId = req.user.uid;
+        // If user is not authenticated, assign a generic or null userId
+        const userId = req.user ? req.user.uid : 'anonymous';
 
         // Check if a file was uploaded by multer
         if (!req.file) {
@@ -77,11 +73,7 @@ export const uploadResume = async (req: Request, res: Response): Promise<void> =
 // --- Analyze Resume Function ---
 export const analyzeResume = async (req: Request, res: Response): Promise<void> => {
     try {
-        if (!req.user) {
-            res.status(401).json({ message: 'Unauthorized: User not authenticated' });
-            return;
-        }
-        const userId = req.user.uid;
+        const userId = req.user ? req.user.uid : 'anonymous';
         const { resumeId } = req.params;
 
         if (!resumeId) {
@@ -100,8 +92,8 @@ export const analyzeResume = async (req: Request, res: Response): Promise<void> 
 
         const resumeData = resumeDoc.data() as Resume;
 
-        // Verify ownership
-        if (resumeData.userId !== userId) {
+        // Verify ownership, allowing anonymous users to analyze anonymously uploaded resumes
+        if (resumeData.userId !== userId && !(resumeData.userId === 'anonymous' && userId === 'anonymous')) {
             res.status(403).json({ message: 'Forbidden: You do not own this resume' });
             return;
         }

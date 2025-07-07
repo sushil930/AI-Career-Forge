@@ -11,6 +11,7 @@ import builderRoutes from './routes/builder.routes'; // Import builder routes
 import matchRoutes from './routes/match.routes'; // Import match routes
 import tipsRoutes from './routes/tips.routes'; // Import tips routes
 import coverLetterRoutes from './routes/coverLetter.routes'; // Import the new routes
+import activityRoutes from './routes/activity.routes'; // Import activity routes
 
 dotenv.config(); // Load environment variables from .env file
 
@@ -36,6 +37,7 @@ app.use('/api/builder', builderRoutes); // Use builder routes under /api/builder
 app.use('/api/match', matchRoutes); // Use match routes under /api/match
 app.use('/api/tips', tipsRoutes); // Use tips routes under /api/tips
 app.use('/api/cover-letter', coverLetterRoutes); // Use the new routes
+app.use('/api/activity', activityRoutes); // Use activity routes
 
 // Basic route
 app.get('/', (req: Request, res: Response) => {

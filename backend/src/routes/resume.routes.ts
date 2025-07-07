@@ -16,15 +16,13 @@ router.get(
 // POST /api/resumes/upload - Upload and parse a resume
 router.post(
     '/upload',
-    authenticateToken, // First, ensure user is authenticated
-    upload.single('resumeFile'), // Then, handle single file upload named 'resumeFile'
-    uploadResume // Finally, process the uploaded file
+    upload.single('resumeFile'), // Handle single file upload named 'resumeFile'
+    uploadResume // Process the uploaded file
 );
 
 // POST /api/resumes/:resumeId/analyze - Analyze a specific resume
 router.post(
     '/:resumeId/analyze',
-    authenticateToken, // Ensure user is authenticated
     analyzeResume // Call the analysis controller function
 );
 

@@ -383,43 +383,45 @@ const ResumeBuilder = () => {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8 max-w-6xl">
+    <div className="container mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4 md:px-6 lg:px-8 max-w-6xl">
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="mb-8"
+        className="mb-4 sm:mb-6 md:mb-8"
       >
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Resume Builder</h1>
-            <p className="text-gray-600 mt-2 text-lg">
+            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Resume Builder</h1>
+            <p className="text-gray-600 mt-1 sm:mt-2 text-base sm:text-lg">
               Craft your perfect resume with our AI-powered assistant
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             <Button 
               variant="outline" 
               onClick={handleFillWithMockData} 
-              className="bg-gradient-to-r from-amber-50 to-amber-100 hover:from-amber-100 hover:to-amber-200 text-amber-700 border border-amber-300"
+              className="bg-gradient-to-r from-amber-50 to-amber-100 hover:from-amber-100 hover:to-amber-200 text-amber-700 border border-amber-300 text-xs sm:text-sm h-9 sm:h-10"
+              size="sm"
             >
-              <TestTube2 className="mr-2 h-4 w-4" />
+              <TestTube2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               Fill with Example Data
             </Button>
             {!generatedText && (
               <Button 
                 onClick={generateResumeContent}
                 disabled={isGenerating}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-xs sm:text-sm h-9 sm:h-10"
+                size="sm"
               >
                 {isGenerating ? (
                   <>
-                    <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
+                    <CircleDashed className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                     Generating...
                   </>
                 ) : (
                   <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
+                    <RefreshCw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                     Generate Resume
                   </>
                 )}
@@ -446,7 +448,7 @@ const ResumeBuilder = () => {
         )}
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
         {!generatedText ? (
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
@@ -455,80 +457,80 @@ const ResumeBuilder = () => {
             className="lg:col-span-2"
           >
             <Card className="overflow-hidden border-gray-200 shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b">
-                <CardTitle className="text-gray-800">Build Your Resume</CardTitle>
-                <CardDescription className="text-gray-600">
+              <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b py-3 sm:py-4 px-4 sm:px-6">
+                <CardTitle className="text-gray-800 text-lg sm:text-xl">Build Your Resume</CardTitle>
+                <CardDescription className="text-gray-600 text-xs sm:text-sm">
                   Fill out each section to create a professional resume
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="w-full rounded-none border-b bg-gray-50 px-2 py-0 h-auto flex flex-wrap">
+                  <TabsList className="w-full rounded-none border-b bg-gray-50 px-1 sm:px-2 py-0 h-auto flex flex-wrap overflow-x-auto">
                     <TabsTrigger 
                       value="personal" 
-                      className={`py-3 px-4 rounded-none border-b-2 ${activeTab === "personal" ? "border-blue-500" : "border-transparent"}`}
+                      className={`py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm rounded-none border-b-2 ${activeTab === "personal" ? "border-blue-500" : "border-transparent"}`}
                     >
                       Personal Info
                     </TabsTrigger>
                     <TabsTrigger 
                       value="summary" 
-                      className={`py-3 px-4 rounded-none border-b-2 ${activeTab === "summary" ? "border-blue-500" : "border-transparent"}`}
+                      className={`py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm rounded-none border-b-2 ${activeTab === "summary" ? "border-blue-500" : "border-transparent"}`}
                     >
                       Summary
                     </TabsTrigger>
                     <TabsTrigger 
                       value="experience" 
-                      className={`py-3 px-4 rounded-none border-b-2 ${activeTab === "experience" ? "border-blue-500" : "border-transparent"}`}
+                      className={`py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm rounded-none border-b-2 ${activeTab === "experience" ? "border-blue-500" : "border-transparent"}`}
                     >
                       Experience
                     </TabsTrigger>
                     <TabsTrigger 
                       value="education" 
-                      className={`py-3 px-4 rounded-none border-b-2 ${activeTab === "education" ? "border-blue-500" : "border-transparent"}`}
+                      className={`py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm rounded-none border-b-2 ${activeTab === "education" ? "border-blue-500" : "border-transparent"}`}
                     >
                       Education
                     </TabsTrigger>
                     <TabsTrigger 
                       value="skills" 
-                      className={`py-3 px-4 rounded-none border-b-2 ${activeTab === "skills" ? "border-blue-500" : "border-transparent"}`}
+                      className={`py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm rounded-none border-b-2 ${activeTab === "skills" ? "border-blue-500" : "border-transparent"}`}
                     >
                       Skills
                     </TabsTrigger>
                     <TabsTrigger 
                       value="projects" 
-                      className={`py-3 px-4 rounded-none border-b-2 ${activeTab === "projects" ? "border-blue-500" : "border-transparent"}`}
+                      className={`py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm rounded-none border-b-2 ${activeTab === "projects" ? "border-blue-500" : "border-transparent"}`}
                     >
                       Projects
                     </TabsTrigger>
                     <TabsTrigger 
                       value="certs" 
-                      className={`py-3 px-4 rounded-none border-b-2 ${activeTab === "certs" ? "border-blue-500" : "border-transparent"}`}
+                      className={`py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm rounded-none border-b-2 ${activeTab === "certs" ? "border-blue-500" : "border-transparent"}`}
                     >
                       Certifications
                     </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="personal" className="p-6 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="name" className="text-gray-700">Full Name <span className="text-red-500">*</span></Label>
+                  <TabsContent value="personal" className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                      <div className="space-y-1 sm:space-y-2">
+                        <Label htmlFor="name" className="text-gray-700 text-sm sm:text-base">Full Name <span className="text-red-500">*</span></Label>
                         <Input
                           id="name"
                           value={userInfo.personalInfo.name}
                           onChange={(e) => handleInputChange('personalInfo', "name", e.target.value)}
                           placeholder="John Doe"
-                          className="border-gray-300 focus:border-blue-400"
+                          className="border-gray-300 focus:border-blue-400 h-8 sm:h-10 text-sm sm:text-base"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email" className="text-gray-700">Email <span className="text-red-500">*</span></Label>
+                      <div className="space-y-1 sm:space-y-2">
+                        <Label htmlFor="email" className="text-gray-700 text-sm sm:text-base">Email <span className="text-red-500">*</span></Label>
                         <Input
                           id="email"
                           type="email"
                           value={userInfo.personalInfo.email}
                           onChange={(e) => handleInputChange('personalInfo', "email", e.target.value)}
                           placeholder="john.doe@example.com"
-                          className="border-gray-300 focus:border-blue-400"
+                          className="border-gray-300 focus:border-blue-400 h-8 sm:h-10 text-sm sm:text-base"
                         />
                       </div>
                       <div className="space-y-2">
@@ -572,12 +574,13 @@ const ResumeBuilder = () => {
                         />
                       </div>
                     </div>
-                    <div className="pt-4 flex justify-end">
+                    <div className="pt-3 sm:pt-4 flex justify-end">
                       <Button 
                         onClick={handleNextTab}
-                        className="bg-blue-600 hover:bg-blue-700"
+                        className="bg-blue-600 hover:bg-blue-700 h-8 sm:h-10 text-xs sm:text-sm"
+                        size="sm"
                       >
-                        Next: Summary <ChevronRight className="ml-1 h-4 w-4" />
+                        Next: Summary <ChevronRight className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
                     </div>
                   </TabsContent>

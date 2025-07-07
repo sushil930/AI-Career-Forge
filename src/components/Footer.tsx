@@ -5,7 +5,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative bg-white border-t border-slate-100 py-16">
+    <footer className="relative bg-white border-t border-slate-100 py-8 sm:py-12 md:py-16">
       {/* Texture overlay */}
       <div className="absolute inset-0 -z-10">
         {/* Gradient background */}
@@ -26,17 +26,17 @@ export function Footer() {
         <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle,_#3b82f6_1px,_transparent_1px)] bg-[length:20px_20px]"></div>
       </div>
       
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 md:gap-12 text-center sm:text-left">
           {/* Brand Column */}
-          <div className="col-span-1 md:col-span-2">
-            <div className="mb-6">
-              <span className="font-bold text-2xl text-slate-900">AI Resume Pro</span>
+          <div className="col-span-1 sm:col-span-2">
+            <div className="mb-4 sm:mb-6">
+              <span className="font-bold text-xl sm:text-2xl text-slate-900">AI Career Forge</span>
             </div>
-            <p className="text-slate-600 mb-6 max-w-sm">
-              Using AI to help you build, analyze, and improve your resume for better job opportunities.
+            <p className="text-sm sm:text-base text-slate-600 mb-4 sm:mb-6 max-w-sm mx-auto sm:mx-0">
+              Using AI to help you forge your career path with better resumes and job matching.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex justify-center sm:justify-start space-x-4">
               <a 
                 href="https://twitter.com" 
                 target="_blank" 
@@ -69,32 +69,32 @@ export function Footer() {
           
           {/* Quick Links */}
           <div>
-            <h3 className="text-sm uppercase text-slate-400 font-medium tracking-wider mb-6">
+            <h3 className="text-xs sm:text-sm uppercase text-slate-400 font-medium tracking-wider mb-4 sm:mb-6">
               Product
             </h3>
-            <ul className="space-y-4">
+            <ul className="space-y-3 sm:space-y-4">
               <li>
-                <Link to="/analyze" className="text-slate-600 hover:text-blue-600 transition-colors inline-flex items-center group">
+                <Link to="/analyze" className="text-sm sm:text-base text-slate-600 hover:text-blue-600 transition-colors inline-flex items-center group">
                   <span>Resume Analysis</span>
-                  <ArrowUpRight size={14} className="ml-1 transition-transform group-hover:translate-x-1" />
+                  <ArrowUpRight size={12} className="sm:size-[14px] ml-1 transition-transform group-hover:translate-x-1" />
                 </Link>
               </li>
               <li>
-                <Link to="/builder" className="text-slate-600 hover:text-blue-600 transition-colors inline-flex items-center group">
+                <Link to="/builder" className="text-sm sm:text-base text-slate-600 hover:text-blue-600 transition-colors inline-flex items-center group">
                   <span>Resume Builder</span>
-                  <ArrowUpRight size={14} className="ml-1 transition-transform group-hover:translate-x-1" />
+                  <ArrowUpRight size={12} className="sm:size-[14px] ml-1 transition-transform group-hover:translate-x-1" />
                 </Link>
               </li>
               <li>
-                <Link to="/job-match" className="text-slate-600 hover:text-blue-600 transition-colors inline-flex items-center group">
+                <Link to="/job-match" className="text-sm sm:text-base text-slate-600 hover:text-blue-600 transition-colors inline-flex items-center group">
                   <span>Job Matching</span>
-                  <ArrowUpRight size={14} className="ml-1 transition-transform group-hover:translate-x-1" />
+                  <ArrowUpRight size={12} className="sm:size-[14px] ml-1 transition-transform group-hover:translate-x-1" />
                 </Link>
               </li>
               <li>
-                <Link to="/pricing" className="text-slate-600 hover:text-blue-600 transition-colors inline-flex items-center group">
+                <Link to="/pricing" className="text-sm sm:text-base text-slate-600 hover:text-blue-600 transition-colors inline-flex items-center group">
                   <span>Pricing</span>
-                  <ArrowUpRight size={14} className="ml-1 transition-transform group-hover:translate-x-1" />
+                  <ArrowUpRight size={12} className="sm:size-[14px] ml-1 transition-transform group-hover:translate-x-1" />
                 </Link>
               </li>
             </ul>
@@ -102,35 +102,35 @@ export function Footer() {
           
           {/* Contact */}
           <div>
-            <h3 className="text-sm uppercase text-slate-400 font-medium tracking-wider mb-6">
+            <h3 className="text-xs sm:text-sm uppercase text-slate-400 font-medium tracking-wider mb-4 sm:mb-6">
               Company
             </h3>
-            <ul className="space-y-4">
+            <ul className="space-y-3 sm:space-y-4">
               <li>
-                <Link to="/about" className="text-slate-600 hover:text-blue-600 transition-colors inline-flex items-center group">
+                <Link to="/about" className="text-sm sm:text-base text-slate-600 hover:text-blue-600 transition-colors inline-flex items-center group">
                   <span>About Us</span>
-                  <ArrowUpRight size={14} className="ml-1 transition-transform group-hover:translate-x-1" />
+                  <ArrowUpRight size={12} className="sm:size-[14px] ml-1 transition-transform group-hover:translate-x-1" />
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-slate-600 hover:text-blue-600 transition-colors inline-flex items-center group">
+                <Link to="/contact" className="text-sm sm:text-base text-slate-600 hover:text-blue-600 transition-colors inline-flex items-center group">
                   <span>Contact</span>
-                  <ArrowUpRight size={14} className="ml-1 transition-transform group-hover:translate-x-1" />
+                  <ArrowUpRight size={12} className="sm:size-[14px] ml-1 transition-transform group-hover:translate-x-1" />
                 </Link>
               </li>
               <li>
-                <a href="mailto:support@airesumepro.com" className="text-slate-600 hover:text-blue-600 transition-colors inline-flex items-center group">
-                  <span>support@airesumepro.com</span>
-                  <ArrowUpRight size={14} className="ml-1 transition-transform group-hover:translate-x-1" />
+                <a href="mailto:support@aicareerforge.com" className="text-sm sm:text-base text-slate-600 hover:text-blue-600 transition-colors inline-flex items-center group">
+                  <span>support@aicareerforge.com</span>
+                  <ArrowUpRight size={12} className="sm:size-[14px] ml-1 transition-transform group-hover:translate-x-1" />
                 </a>
               </li>
             </ul>
           </div>
         </div>
         
-        <div className="border-t border-slate-100 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center text-slate-500 text-sm">
-          <p>&copy; {currentYear} AI Resume Pro. All rights reserved.</p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
+        <div className="border-t border-slate-100 mt-10 sm:mt-16 pt-6 sm:pt-8 flex flex-col md:flex-row justify-between items-center text-slate-500 text-xs sm:text-sm">
+          <p>&copy; {currentYear} AI Career Forge. All rights reserved.</p>
+          <div className="flex space-x-4 sm:space-x-6 mt-4 md:mt-0">
             <Link to="/privacy" className="hover:text-blue-600 transition-colors">
               Privacy Policy
             </Link>

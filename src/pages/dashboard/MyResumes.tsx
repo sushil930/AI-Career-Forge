@@ -53,8 +53,8 @@ export default function MyResumes() {
       setError(null);
       try {
         const [uploadedRes, generatedRes] = await Promise.all([
-          apiClient.get('/resumes'),
-          apiClient.get('/builder/generated')
+          apiClient.get('/api/resumes'),
+          apiClient.get('/api/builder/generated')
         ]);
 
         if (uploadedRes.data && Array.isArray(uploadedRes.data.resumes)) {

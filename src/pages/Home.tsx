@@ -1,13 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { SignInPromptModal } from "@/components/SignInPromptModal";
 import { ArrowRight, FileText, Check, Zap, ArrowUpRight, ChevronRight, BarChart, Star } from "lucide-react";
 
 const Home = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isVisible, setIsVisible] = useState(false);
   const heroImgRef = useRef<HTMLDivElement>(null);
   const [scrollY, setScrollY] = useState(0);
+  const [showSignInModal, setShowSignInModal] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
@@ -34,7 +38,11 @@ const Home = () => {
 
   const handleButtonClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    navigate("/dashboard");
+    if (!user) {
+      setShowSignInModal(true);
+    } else {
+      navigate("/dashboard");
+    }
   };
 
   return (
@@ -80,48 +88,50 @@ const Home = () => {
                 <Zap size={14} className="mr-1.5" /> AI-Powered Resume Optimization
               </div>
               
-              <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-slate-900 mb-6 leading-tight">
-                Land more interviews with an <span className="relative inline-block">
-                  <span className="relative z-10">optimized</span>
-                  <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-100 -z-10"></span>
-                </span> resume
-            </h1>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 mb-4 sm:mb-6 leading-tight">
+                AI Career Forge: <span className="relative inline-block">
+                  <span className="relative z-10">Transform</span>
+                  <span className="absolute bottom-1 left-0 w-full h-2 sm:h-3 bg-blue-100 -z-10"></span>
+                </span> your job search
+              </h1>
               
-              <p className="text-xl text-slate-600 mb-8 leading-relaxed">
-                Our AI analyzes your resume against job requirements to maximize your chances of getting noticed by both hiring managers and ATS systems.
-            </p>
+              <p className="text-base sm:text-lg md:text-xl text-slate-600 mb-6 sm:mb-8 leading-relaxed">
+                AI Career Forge helps you craft the perfect resume and optimize your job search strategy with advanced AI analysis.
+              </p>
               
-              <div className="flex flex-col sm:flex-row gap-4 mb-10">
+              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-8 sm:mb-10">
               <Button 
                 size="lg" 
                 onClick={handleButtonClick}
-                  className="bg-blue-600 hover:bg-blue-700 text-white rounded-full h-14 px-8 transition-all"
+                className="w-full sm:w-auto rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm sm:text-base py-5 px-5 sm:px-6"
               >
                   <span className="mr-2">Start Optimizing</span>
-                  <ArrowRight size={18} />
+                  <ArrowRight size={16} className="sm:size-[18px]" />
               </Button>
                 
-                <button 
-                onClick={handleButtonClick}
-                  className="text-slate-700 hover:text-blue-600 font-medium flex items-center transition-colors"
+                <Button 
+                  variant="ghost" 
+                  size="lg" 
+                  onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="w-full sm:w-auto text-slate-600 hover:text-blue-600"
                 >
                   See how it works <ChevronRight size={16} className="ml-1" />
-                </button>
+                </Button>
               </div>
               
               {/* Stats */}
-              <div className="grid grid-cols-3 gap-4 lg:gap-6 pt-6 border-t border-slate-100">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6 pt-4 sm:pt-6 border-t border-slate-100">
                 <div>
-                  <div className="text-2xl font-bold text-blue-600">94%</div>
-                  <div className="text-sm text-slate-500">ATS Pass Rate</div>
+                  <div className="text-xl sm:text-2xl font-bold text-blue-600">94%</div>
+                  <div className="text-xs sm:text-sm text-slate-500">ATS Pass Rate</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-blue-600">3x</div>
-                  <div className="text-sm text-slate-500">More Interviews</div>
+                  <div className="text-xl sm:text-2xl font-bold text-blue-600">3x</div>
+                  <div className="text-xs sm:text-sm text-slate-500">More Interviews</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-blue-600">10k+</div>
-                  <div className="text-sm text-slate-500">Users</div>
+                  <div className="text-xl sm:text-2xl font-bold text-blue-600">10k+</div>
+                  <div className="text-xs sm:text-sm text-slate-500">Users</div>
                 </div>
               </div>
             </div>
@@ -212,7 +222,7 @@ const Home = () => {
                 </div>
                 
                 {/* Floating Elements */}
-                <div className="absolute -top-4 -right-4 bg-white rounded-lg shadow-lg p-3 animate-float">
+                <div className="hidden lg:block absolute -top-4 -right-4 bg-white rounded-lg shadow-lg p-3 animate-float">
                   <div className="flex items-center">
                     <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center mr-2">
                       <Check size={18} className="text-green-600" />
@@ -224,7 +234,7 @@ const Home = () => {
                   </div>
                 </div>
                 
-                <div className="absolute -bottom-4 -left-4 bg-white rounded-lg shadow-lg p-3 animate-float animation-delay-1000">
+                <div className="hidden lg:block absolute -bottom-4 -left-4 bg-white rounded-lg shadow-lg p-3 animate-float animation-delay-1000">
                   <div className="flex items-center">
                     <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center mr-2">
                       <BarChart size={18} className="text-blue-600" />
@@ -242,14 +252,14 @@ const Home = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-24 bg-white">
+      <section className="py-16 lg:py-24 bg-white">
         <div className="container mx-auto px-6">
           <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-16 reveal fade-bottom">
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            <div className="text-center mb-10 sm:mb-16 reveal fade-bottom">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-3 sm:mb-4">
                 Optimize your resume in three steps
               </h2>
-              <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
                 Our intelligent platform makes it easy to create an interview-winning resume.
             </p>
           </div>
@@ -327,17 +337,17 @@ const Home = () => {
         <div className="container mx-auto px-6 relative z-10">
           <div className="max-w-5xl mx-auto">
             {/* Testimonials Header */}
-            <div className="mb-16 text-center reveal fade-bottom">
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4 leading-tight">
+            <div className="mb-10 sm:mb-16 text-center reveal fade-bottom">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-3 sm:mb-4 leading-tight">
                 Trusted by thousands of job seekers
               </h2>
-              <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto">
                 See how our AI resume optimization tool has helped professionals land their dream jobs
               </p>
             </div>
             
             {/* Testimonials Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Testimonial 1 */}
               <div className="bg-white/70 backdrop-blur-sm border border-slate-100 rounded-xl p-6 reveal fade-bottom delay-300 hover:shadow-md transition-all duration-300 hover:-translate-y-1">
                 <div className="flex items-center space-x-1 mb-4 text-amber-400">
@@ -349,7 +359,7 @@ const Home = () => {
                 </div>
                 
                 <p className="text-slate-700 mb-6">
-                  "I landed 3 interviews in my first week after optimizing my resume with AI Resume Pro. The keyword suggestions were spot-on for the tech industry."
+                  "I landed 3 interviews in my first week after optimizing my resume with AI Career Forge. The keyword suggestions were spot-on for the tech industry."
                 </p>
                 
                 <div className="flex items-center">
@@ -421,8 +431,8 @@ const Home = () => {
             </div>
             
             {/* Featured Testimonial - Large */}
-            <div className="mt-12 reveal fade-bottom delay-300">
-              <div className="bg-blue-50/80 backdrop-blur-sm rounded-2xl p-8 md:p-12 relative overflow-hidden hover:shadow-lg transition-all duration-300">
+            <div className="mt-8 sm:mt-12 reveal fade-bottom delay-300">
+              <div className="bg-blue-50/80 backdrop-blur-sm rounded-2xl p-5 sm:p-8 md:p-12 relative overflow-hidden hover:shadow-lg transition-all duration-300">
                 {/* Background pattern */}
                 <div className="absolute inset-0 opacity-10">
                   <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -445,7 +455,7 @@ const Home = () => {
                     <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z" />
                   </svg>
                   
-                  <p className="text-xl md:text-2xl text-slate-700 font-medium mb-8 leading-relaxed">
+                  <p className="text-lg sm:text-xl md:text-2xl text-slate-700 font-medium mb-6 sm:mb-8 leading-relaxed">
                     "Before using AI Resume Pro, my resume was getting lost in the ATS systems. Now I'm getting callbacks from 80% of the positions I apply to. The tailored keyword suggestions for each job posting made all the difference."
                   </p>
                   
@@ -468,22 +478,22 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-blue-600 text-white">
+      <section className="py-16 sm:py-20 md:py-24 bg-blue-600 text-white">
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-center reveal fade-bottom">
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
               Ready to land your dream job?
             </h2>
-            <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-blue-100 mb-6 sm:mb-10 max-w-2xl mx-auto">
               Join thousands of professionals who have transformed their careers with our AI-powered resume tools.
             </p>
             <Button 
               size="lg"
               onClick={handleButtonClick}
-              className="bg-white text-blue-600 hover:bg-blue-50 rounded-full h-14 px-8 transition-all"
+              className="bg-white text-blue-600 hover:bg-blue-50 rounded-full h-12 sm:h-14 px-6 sm:px-8 transition-all text-sm sm:text-base"
             >
               <span className="mr-2">Get Started Free</span>
-              <ArrowRight size={18} />
+              <ArrowRight size={16} className="sm:size-[18px]" />
           </Button>
           </div>
         </div>
@@ -537,6 +547,7 @@ const Home = () => {
           animation: float 4s ease-in-out infinite;
         }
       `}</style>
+      <SignInPromptModal isOpen={showSignInModal} onClose={() => setShowSignInModal(false)} />
     </div>
   );
 };
