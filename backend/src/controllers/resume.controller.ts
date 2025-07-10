@@ -1,4 +1,22 @@
 import { Request, Response } from 'express';
+import { AxiosError } from 'axios';
+
+interface ApiError extends Error {
+    code?: string;
+    status?: string | number;
+    response?: {
+        status?: string | number;
+        data?: { message?: string; };
+    };
+}
+
+interface ResumeAnalysisResult {
+    skills?: string[];
+    experience?: string[];
+    education?: string[];
+    summary?: string;
+    // Add other properties as they become clear from AI response structure
+}
 // import admin from 'firebase-admin'; // Keep for FieldValue type
 import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
@@ -8,6 +26,10 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/ge
 import { db } from '../config/firebase.config';
 import admin from 'firebase-admin'; // Still needed for admin.firestore.FieldValue
 
+interface CustomRequest extends Request {
+    user?: admin.auth.DecodedIdToken;
+}
+
 // const db = admin.firestore(); // Removed: Use imported db
 
 // Initialize Google Generative AI 
@@ -16,7 +38,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" }); // Use current recommended model
 
 // Placeholder for uploadResume function
-export const uploadResume = async (req: Request, res: Response): Promise<void> => {
+export const uploadResume = async (req: CustomRequest, res: Response): Promise<void> => {
     try {
         // If user is not authenticated, assign a generic or null userId
         const userId = req.user ? req.user.uid : 'anonymous';
@@ -63,15 +85,16 @@ export const uploadResume = async (req: Request, res: Response): Promise<void> =
         // Respond with the ID of the newly created resume document
         res.status(201).json({ message: 'Resume uploaded and parsed successfully', resumeId: resumeRef.id });
 
-    } catch (error: any) {
-        console.error("[upload]: Resume upload/parsing error:", error);
-        // Handle specific parsing errors if needed
-        res.status(500).json({ message: 'Internal server error during resume processing', error: error.message });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error("[upload]: Resume upload/parsing error:", error.message);
+            res.status(500).json({ message: 'Internal server error during resume processing', error: error.message });
+        }
     }
 };
 
 // --- Analyze Resume Function ---
-export const analyzeResume = async (req: Request, res: Response): Promise<void> => {
+export const analyzeResume = async (req: CustomRequest, res: Response): Promise<void> => {
     try {
         const userId = req.user ? req.user.uid : 'anonymous';
         const { resumeId } = req.params;
@@ -155,7 +178,7 @@ export const analyzeResume = async (req: Request, res: Response): Promise<void> 
         console.log(`[analyze]: Received raw response from Gemini for resume ${resumeId}.`);
 
         // --- Parse Gemini Response --- (Robust parsing needed)
-        let analysisResult: any = {};
+        let analysisResult: ResumeAnalysisResult = {};
         try {
             // Attempt to parse the text response as JSON
             // Find the start and end of the JSON block if necessary
@@ -170,12 +193,14 @@ export const analyzeResume = async (req: Request, res: Response): Promise<void> 
 
             // TODO: Add validation for the structure of analysisResult (ensure required keys exist)
 
-        } catch (parseError: any) {
-            console.error(`[analyze]: Error parsing Gemini response for resume ${resumeId}:`, parseError);
-            // Log the raw response for debugging
-            console.error(`[analyze]: Raw AI response: ${aiTextResponse}`);
-            res.status(500).json({ message: 'Failed to parse AI analysis response', error: parseError.message });
-            return;
+        } catch (parseError: unknown) {
+            if (parseError instanceof Error) {
+                console.error(`[analyze]: Error parsing Gemini response for resume ${resumeId}:`, parseError.message);
+                // Log the raw response for debugging
+                console.error(`[analyze]: Raw AI response: ${aiTextResponse}`);
+                res.status(500).json({ message: 'Failed to parse AI analysis response', error: parseError.message });
+                return;
+            }
         }
 
         // --- Update Firestore --- 
@@ -191,20 +216,22 @@ export const analyzeResume = async (req: Request, res: Response): Promise<void> 
 
         res.status(200).json({ message: 'Resume analyzed successfully', analysis: analysisUpdateData.analysis });
 
-    } catch (error: any) {
-        console.error(`[analyze]: Error during resume analysis for resume ${req.params.resumeId}:`, error);
-        if (error.message.includes('GOOGLE_API_KEY_INVALID')) {
-            res.status(500).json({ message: 'Internal Server Error: Invalid Gemini API Key configured.' });
-        } else if (error.code === 'permission-denied' || error.status === 'PERMISSION_DENIED') {
-            res.status(500).json({ message: 'Internal Server Error: Firebase permission issue.' });
-        } else {
-            res.status(500).json({ message: 'Internal server error during analysis', error: error.message });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error(`[analyze]: Error during resume analysis for resume ${req.params.resumeId}:`, error.message);
+            if ((error as ApiError).message.includes('GOOGLE_API_KEY_INVALID')) {
+                res.status(500).json({ message: 'Internal Server Error: Invalid Gemini API Key configured.' });
+            } else if ((error as ApiError).code === 'permission-denied' || (error as ApiError).status === 'PERMISSION_DENIED') {
+                res.status(500).json({ message: 'Internal Server Error: Firebase permission issue.' });
+            } else {
+                res.status(500).json({ message: 'Internal server error during analysis', error: (error as ApiError).message });
+            }
         }
     }
 };
 
 // --- Get Uploaded Resumes Function ---
-export const getUploadedResumes = async (req: Request, res: Response): Promise<void> => {
+export const getUploadedResumes = async (req: CustomRequest, res: Response): Promise<void> => {
     try {
         if (!req.user) {
             res.status(401).json({ message: 'Unauthorized: User not authenticated' });
@@ -240,12 +267,14 @@ export const getUploadedResumes = async (req: Request, res: Response): Promise<v
         console.log(`[getResumes]: Found ${resumes.length} uploaded resumes for user ${userId}`);
         res.status(200).json({ resumes });
 
-    } catch (error: any) {
-        console.error(`[getResumes]: Error fetching uploaded resumes for user ${req.user?.uid}:`, error);
-        if (error.code === 'permission-denied' || error.status === 'PERMISSION_DENIED') {
-            res.status(500).json({ message: 'Internal Server Error: Firebase permission issue.' });
-        } else {
-            res.status(500).json({ message: 'Internal server error fetching uploaded resumes', error: error.message });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error(`[getResumes]: Error fetching uploaded resumes for user ${req.user?.uid}:`, error.message);
+            if ((error as ApiError).code === 'permission-denied' || (error as ApiError).status === 'PERMISSION_DENIED') {
+                res.status(500).json({ message: 'Internal Server Error: Firebase permission issue.' });
+            } else {
+                res.status(500).json({ message: 'Internal server error fetching uploaded resumes', error: error.message });
+            }
         }
     }
 };

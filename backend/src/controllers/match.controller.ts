@@ -1,11 +1,29 @@
 import { Request, Response } from 'express';
-// import admin from 'firebase-admin'; // No longer needed directly here
+import { AxiosError } from 'axios';
+
+interface ApiError extends Error {
+    code?: string;
+    status?: number;
+    response?: AxiosError['response'];
+}
+
+interface AnalysisResult {
+    matchScore?: number;
+    feedback?: string;
+    matchedSkills?: string[];
+    // Add other properties as they become clear from AI response structure
+}
+import admin from 'firebase-admin';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { Resume } from '../models/resume.model'; // To potentially fetch resume by ID
 // Import initialized db from config
 import { db } from '../config/firebase.config';
 import pdfParse from 'pdf-parse'; // For parsing PDF files
 import mammoth from 'mammoth'; // For parsing DOCX files
+
+interface CustomRequest extends Request {
+    user?: admin.auth.DecodedIdToken;
+}
 
 // const db = admin.firestore(); // Removed: Use imported db
 
@@ -14,7 +32,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 // const model = genAI.getGenerativeModel({ model: "gemini-pro" }); // Old model
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" }); // Use current recommended model
 
-export const matchResumeToJob = async (req: Request, res: Response): Promise<void> => {
+export const matchResumeToJob = async (req: CustomRequest, res: Response): Promise<void> => {
     try {
         if (!req.user) {
             res.status(401).json({ message: 'Unauthorized: User not authenticated' });
@@ -55,9 +73,11 @@ export const matchResumeToJob = async (req: Request, res: Response): Promise<voi
                     return;
                 }
                 console.log(`[match]: Successfully extracted text from ${req.file.originalname} for user ${userId}`);
-            } catch (extractionError: any) {
-                console.error(`[match]: Error extracting text from file ${req.file.originalname} for user ${userId}:`, extractionError);
-                res.status(500).json({ message: 'Error processing uploaded resume file.', error: extractionError.message });
+            } catch (extractionError: unknown) {
+                if (extractionError instanceof Error) {
+                    console.error(`[match]: Error extracting text from file ${req.file.originalname} for user ${userId}:`, extractionError.message);
+                    res.status(500).json({ message: 'Error processing uploaded resume file.', error: extractionError.message });
+                }
                 return;
             }
         } else if (resumeId) { // Fallback if frontend or API caller still uses resumeId
@@ -140,7 +160,7 @@ export const matchResumeToJob = async (req: Request, res: Response): Promise<voi
         console.log(`[match]: Received raw comparison response from Gemini for user ${userId}. Length: ${aiTextResponse.length}`);
 
         // --- Parse Gemini Response --- 
-        let analysisResult: any = {};
+        let analysisResult: AnalysisResult = {};
         try {
             // Improved JSON extraction: look for JSON block specifically
             const jsonMatch = aiTextResponse.match(/```json\n(\{.*?\})\n```/s) || aiTextResponse.match(/(\{.*?\})/s);
@@ -151,24 +171,29 @@ export const matchResumeToJob = async (req: Request, res: Response): Promise<voi
                 console.error(`[match]: Failed to find valid JSON in Gemini comparison response for user ${userId}. Response: ${aiTextResponse}`);
                 throw new Error('Failed to parse AI matching response as JSON.');
             }
-        } catch (parseError: any) {
-            console.error(`[match]: Error parsing Gemini comparison response for user ${userId}:`, parseError);
-            console.error(`[match]: Raw AI comparison response for user ${userId}: ${aiTextResponse}`);
-            res.status(500).json({ message: 'Failed to parse AI matching response', error: parseError.message, rawResponse: aiTextResponse });
+        } catch (parseError: unknown) {
+            if (parseError instanceof Error) {
+                console.error(`[match]: Error parsing Gemini comparison response for user ${userId}:`, parseError.message);
+                console.error(`[match]: Raw AI comparison response for user ${userId}: ${aiTextResponse}`);
+                res.status(500).json({ message: 'Failed to parse AI matching response', error: parseError.message, rawResponse: aiTextResponse });
+            }
             return;
         }
 
         // --- Return Result --- 
         res.status(200).json({ message: 'Resume matched to job description successfully', analysis: analysisResult });
 
-    } catch (error: any) {
-        console.error("[match]: Resume-Job matching error for user", req.user?.uid, ":", error);
-        if (error.message && error.message.includes('GOOGLE_API_KEY_INVALID')) {
-            res.status(500).json({ message: 'Internal Server Error: Invalid Gemini API Key configured.' });
-        } else if (error.code === 'permission-denied' || (error.status && error.status === 'PERMISSION_DENIED')) {
-            res.status(500).json({ message: 'Internal Server Error: Firebase/Google API permission issue.' });
-        } else {
-            res.status(500).json({ message: 'Internal server error during matching', error: error.message });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error("[match]: Resume-Job matching error for user", req.user?.uid, ":", error.message);
+            const err = error as { code?: string; status?: string; message: string };
+            if (err.message && err.message.includes('GOOGLE_API_KEY_INVALID')) {
+                res.status(500).json({ message: 'Internal Server Error: Invalid Gemini API Key configured.' });
+            } else if (err.code === 'permission-denied' || (err.status && err.status === 'PERMISSION_DENIED')) {
+                res.status(500).json({ message: 'Internal Server Error: Firebase/Google API permission issue.' });
+            } else {
+                res.status(500).json({ message: 'Internal server error during matching', error: err.message });
+            }
         }
     }
 }; 

@@ -1,22 +1,32 @@
 import request from 'supertest';
 import express from 'express';
-import admin from 'firebase-admin';
+import * as admin from 'firebase-admin';
+
+interface FirebaseAuthError extends Error {
+    code?: string;
+}
 
 // --- Mock firebase-admin --- 
 const mockCreateUser = jest.fn();
 const mockSet = jest.fn();
 const mockDoc = jest.fn(() => ({ set: mockSet }));
 const mockCollection = jest.fn(() => ({ doc: mockDoc }));
-const mockServerTimestamp = jest.fn(() => new Date());
+const mockServerTimestamp = jest.fn(() => Date.now());
 
 // Mock the function call admin.firestore()
 const mockFirestoreInstance = {
     collection: mockCollection,
 };
-const firestoreMockFn = jest.fn(() => mockFirestoreInstance);
 
 // Attach static properties like FieldValue to the function mock itself
-(firestoreMockFn as any).FieldValue = {
+interface FirestoreMock extends jest.Mock {
+    FieldValue?: {
+        serverTimestamp: () => number;
+    };
+}
+
+const firestoreMockFn: FirestoreMock = jest.fn(() => mockFirestoreInstance);
+firestoreMockFn.FieldValue = {
     serverTimestamp: mockServerTimestamp
 };
 
@@ -104,7 +114,7 @@ describe('POST /api/auth/signup', () => {
         expect(mockSet).toHaveBeenCalledWith({
             email: mockUser.email,
             displayName: mockUser.displayName,
-            createdAt: expect.any(Date) // Check createdAt used the mocked Date
+            createdAt: expect.any(Number) // Check createdAt used the mocked Date
         });
     });
 
@@ -118,7 +128,7 @@ describe('POST /api/auth/signup', () => {
     });
 
     it('should return 409 if email already exists', async () => {
-        const emailExistsError = new Error('Email already exists.') as any;
+        const emailExistsError: FirebaseAuthError = new Error('Email already exists.');
         emailExistsError.code = 'auth/email-already-exists';
         mockCreateUser.mockRejectedValue(emailExistsError);
         const response = await request(app).post('/api/auth/signup').send(userData);

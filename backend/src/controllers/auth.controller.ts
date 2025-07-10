@@ -3,10 +3,15 @@ import { Request, Response } from 'express';
 import { db, auth } from '../config/firebase.config';
 import admin from 'firebase-admin'; // Still needed for admin.firestore.FieldValue
 
+// Define CustomRequest interface
+interface CustomRequest extends Request {
+    user?: admin.auth.DecodedIdToken;
+}
+
 // const db = admin.firestore(); // Removed: Use imported db
 
 // Placeholder for signup function
-export const signup = async (req: Request, res: Response): Promise<void> => {
+export const signup = async (req: CustomRequest, res: Response): Promise<void> => {
     try {
         const { email, password, displayName } = req.body;
 
@@ -39,19 +44,22 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
             displayName: userRecord.displayName,
         });
 
-    } catch (error: any) {
-        console.error("Signup error:", error);
-        // Handle specific Firebase Auth errors (e.g., email already exists)
-        if (error.code === 'auth/email-already-exists') {
-            res.status(409).json({ message: 'Email already in use.' }); // 409 Conflict
-        } else {
-            res.status(500).json({ message: 'Internal server error during signup', error: error.message });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error("Signup error:", error.message);
+            // Handle specific Firebase Auth errors (e.g., email already exists)
+            const err = error as { code?: string; message: string };
+            if (err.code === 'auth/email-already-exists') {
+                res.status(409).json({ message: 'Email already in use.' }); // 409 Conflict
+            } else {
+                res.status(500).json({ message: 'Internal server error during signup', error: err.message });
+            }
         }
     }
 };
 
 // Actual login function (placeholder implementation)
-export const login = async (req: Request, res: Response): Promise<void> => {
+export const login = async (req: CustomRequest, res: Response): Promise<void> => {
     // Note: Firebase Auth login is typically handled client-side.
     // The backend usually verifies the ID token sent by the client after login.
     // This endpoint might be used for custom logic or session management if needed,

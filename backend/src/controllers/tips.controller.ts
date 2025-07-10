@@ -51,8 +51,10 @@ export const getTips = async (req: Request, res: Response): Promise<void> => {
         console.log('[tips]: Fetching mock tips.');
         res.status(200).json({ tips: mockTips });
 
-    } catch (error: any) {
-        console.error("[tips]: Error fetching tips:", error);
-        res.status(500).json({ message: 'Internal server error fetching tips', error: error.message });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error("[tips]: Error fetching tips:", error.message);
+            res.status(500).json({ message: 'Internal server error fetching tips', error: error.message });
+        }
     }
 }; 

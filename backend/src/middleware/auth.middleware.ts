@@ -1,16 +1,12 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request as ExpressRequest, Response, NextFunction } from 'express';
 import admin from 'firebase-admin';
 
 // Extend Express Request interface to include 'user' property
-declare global {
-    namespace Express {
-        interface Request {
-            user?: admin.auth.DecodedIdToken;
-        }
-    }
+interface CustomRequest extends ExpressRequest {
+    user?: admin.auth.DecodedIdToken;
 }
 
-export const authenticateToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const authenticateToken = async (req: CustomRequest, res: Response, next: NextFunction): Promise<void> => {
     const authHeader = req.headers.authorization;
     const token = authHeader?.split(' ')[1]; // Expecting "Bearer <token>"
 
@@ -24,12 +20,15 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
         req.user = decodedToken; // Attach decoded user info to the request object
         console.log(`[auth]: User authenticated: ${decodedToken.uid}`);
         next(); // Proceed to the next middleware or route handler
-    } catch (error: any) {
-        console.error("[auth]: Token verification failed:", error);
-        if (error.code === 'auth/id-token-expired') {
-            res.status(401).json({ message: 'Unauthorized: Token expired' });
-        } else {
-            res.status(403).json({ message: 'Forbidden: Invalid token' });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error("[auth]: Token verification failed:", error.message);
+            const err = error as { code?: string; message: string };
+            if (err.code === 'auth/id-token-expired') {
+                res.status(401).json({ message: 'Unauthorized: Token expired' });
+            } else {
+                res.status(401).json({ message: 'Unauthorized: Token verification failed', error: err.message });
+            }
         }
     }
 }; 

@@ -489,18 +489,7 @@ export default function DashboardHome() {
         </div>
       </div>
 
-      {/* Button to add mock data */}
-      <div className="mt-8 flex justify-center">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={addMockActivity}
-          className="text-xs text-gray-600 hover:bg-gray-100"
-        >
-          <PlusCircle size={14} className="mr-1.5" />
-          Add Mock Activity (Dev)
-        </Button>
-      </div>
+
     </div>
   );
 }

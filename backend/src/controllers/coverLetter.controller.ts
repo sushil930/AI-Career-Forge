@@ -1,4 +1,14 @@
 import { Request, Response } from 'express';
+
+interface ApiError extends Error {
+    code?: string;
+    status?: number;
+    response?: {
+        status?: number;
+        data?: { message?: string; };
+    };
+}
+import admin from 'firebase-admin';
 import { db } from '../config/firebase.config'; // Import Firestore instance
 import { Resume } from '../models/resume.model'; // Import Resume interface
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai'; // Import Gemini AI
@@ -8,11 +18,16 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/ge
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" }); // Use the same model as resume analysis
 
+interface CustomRequest extends Request {
+    user?: admin.auth.DecodedIdToken;
+}
+
 // Controller to handle cover letter generation requests
-export const generateCoverLetterController = async (req: Request, res: Response) => {
+export const generateCoverLetterController = async (req: CustomRequest, res: Response): Promise<void> => {
     // Ensure user is authenticated (middleware should have already done this)
     if (!req.user || !req.user.uid) {
-        return res.status(401).json({ message: 'Unauthorized: User not authenticated or UID missing.' });
+        res.status(401).json({ message: 'Unauthorized: User not authenticated or UID missing.' });
+        return;
     }
     const userId = req.user.uid;
 
@@ -25,7 +40,8 @@ export const generateCoverLetterController = async (req: Request, res: Response)
     } = req.body;
 
     if (!selectedResume || !jobDescription) {
-        return res.status(400).json({ message: 'Bad Request: Missing selected resume ID or job description.' });
+        res.status(400).json({ message: 'Bad Request: Missing selected resume ID or job description.' });
+        return;
     }
     
     console.log(`[CoverLetterGen] User: ${userId} attempting to generate cover letter.`);
@@ -38,7 +54,8 @@ export const generateCoverLetterController = async (req: Request, res: Response)
 
         if (!resumeDoc.exists) {
             console.warn(`[CoverLetterGen] Resume not found: ID ${selectedResume} for user ${userId}`);
-            return res.status(404).json({ message: 'Selected resume not found.' });
+            res.status(404).json({ message: 'Selected resume not found.' });
+            return;
         }
 
         const resumeData = resumeDoc.data() as Resume;
@@ -46,12 +63,14 @@ export const generateCoverLetterController = async (req: Request, res: Response)
         // Verify ownership of the resume
         if (resumeData.userId !== userId) {
             console.warn(`[CoverLetterGen] User ${userId} attempted to access unauthorized resume ${selectedResume}`);
-            return res.status(403).json({ message: 'Forbidden: You do not have permission to use this resume.' });
+            res.status(403).json({ message: 'Forbidden: You do not have permission to use this resume.' });
+            return;
         }
 
         if (!resumeData.parsedText || resumeData.parsedText.trim() === '') {
             console.warn(`[CoverLetterGen] Resume ${selectedResume} has no parsable text for user ${userId}`);
-            return res.status(400).json({ message: 'Selected resume contains no text to use for generation.' });
+            res.status(400).json({ message: 'Selected resume contains no text to use for generation.' });
+            return;
         }
 
         const resumeContent = resumeData.parsedText;
@@ -128,23 +147,25 @@ export const generateCoverLetterController = async (req: Request, res: Response)
             generatedCoverLetter: generatedCoverLetter.trim(), // Trim whitespace from AI response
         });
 
-    } catch (error: any) {
-        console.error(`[CoverLetterGen] Error for user ${userId}, resume ${selectedResume}:`, error);
-        
-        let errorMessage = 'Failed to generate cover letter due to an internal error.';
-        if (error.message.includes('GOOGLE_API_KEY_INVALID') || error.message.includes('API key not valid')) {
-            errorMessage = 'Internal Server Error: Invalid Gemini API Key configured.';
-        } else if (error.message.includes('429') || error.message.includes('rate limit')) {
-            errorMessage = 'AI service is busy. Please try again in a moment.';
-        } else if (error.code === 'permission-denied') {
-             errorMessage = 'Database permission error while fetching resume.';
-        } else if (error.message.includes('AI generation resulted in an empty')) {
-            errorMessage = error.message; // Use the specific error message
-        } else if (error.response?.status === 500 && error.response?.data?.message) {
-             // Catch potential upstream errors from AI service if structured
-             errorMessage = `AI Service Error: ${error.response.data.message}`;
-        } 
-
-        res.status(500).json({ message: errorMessage });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error(`[CoverLetterGen] Error for user ${req.user?.uid}, resume ${req.body.selectedResume}:`, error.message);
+            let errorMessage = 'Failed to generate cover letter due to an internal error.';
+            if (error.message.includes('GOOGLE_API_KEY_INVALID') || error.message.includes('API key not valid')) {
+                errorMessage = 'Internal Server Error: Invalid Gemini API Key configured.';
+            } else if (error.message.includes('429') || error.message.includes('rate limit')) {
+                errorMessage = 'AI service is busy. Please try again in a moment.';
+            } else if ((error as ApiError).code === 'permission-denied') {
+                errorMessage = 'Database permission error while fetching resume.';
+            } else if (error.message.includes('AI generation resulted in an empty')) {
+                errorMessage = error.message; // Use the specific error message
+            } else if ((error as ApiError).response?.status === 500) {
+                const apiError = error as ApiError;
+                if (apiError.response?.data && typeof apiError.response.data === 'object' && 'message' in apiError.response.data) {
+                    errorMessage = `AI Service Error: ${(apiError.response.data as { message: string }).message}`;
+                }
+            }
+            res.status(500).json({ message: errorMessage });
+        }
     }
 }; 

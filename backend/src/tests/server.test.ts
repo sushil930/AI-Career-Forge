@@ -1,5 +1,8 @@
 import request from 'supertest';
 import express from 'express';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Temporarily commented out server import and related code for debugging
 
@@ -33,7 +36,6 @@ describe('GET / - Basic Server Test', () => {
 
             // Ensure dotenv runs for potential env vars needed by server during import
             // (Although firebase init is mocked, other parts might use process.env)
-            require('dotenv').config();
 
             const serverModule = await import('../server');
             app = serverModule.default;

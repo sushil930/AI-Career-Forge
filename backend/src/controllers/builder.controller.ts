@@ -7,6 +7,10 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { db } from '../config/firebase.config';
 import admin from 'firebase-admin'; // Still needed for admin.firestore.FieldValue
 
+interface CustomRequest extends Request {
+    user?: admin.auth.DecodedIdToken;
+}
+
 // const db = admin.firestore(); // Removed: Use imported db
 
 // Re-initialize AI client (Consider centralizing this later)
@@ -29,7 +33,7 @@ const formatInputForPrompt = (data: ResumeInputData): string => {
     return promptData.trim();
 };
 
-export const generateResume = async (req: Request, res: Response): Promise<void> => {
+export const generateResume = async (req: CustomRequest, res: Response): Promise<void> => {
     try {
         if (!req.user) {
             res.status(401).json({ message: 'Unauthorized: User not authenticated' });
@@ -96,18 +100,20 @@ export const generateResume = async (req: Request, res: Response): Promise<void>
         // --- Return Generated Text --- 
         res.status(201).json({ message: 'Resume generated successfully', generatedResumeId: docRef.id, generatedText });
 
-    } catch (error: any) {
-        console.error("[builder]: Resume generation error:", error);
-        if (error.message.includes('GOOGLE_API_KEY_INVALID')) {
-            res.status(500).json({ message: 'Internal Server Error: Invalid Gemini API Key configured.' });
-        } else {
-            res.status(500).json({ message: 'Internal server error during resume generation', error: error.message });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error("[builder]: Resume generation error:", error.message);
+            if (error.message.includes('GOOGLE_API_KEY_INVALID')) {
+                res.status(500).json({ message: 'Internal Server Error: Invalid Gemini API Key configured.' });
+            } else {
+                res.status(500).json({ message: 'Internal server error during resume generation', error: error.message });
+            }
         }
     }
 };
 
 // --- Download Generated Resume Function ---
-export const downloadGeneratedResume = async (req: Request, res: Response): Promise<void> => {
+export const downloadGeneratedResume = async (req: CustomRequest, res: Response): Promise<void> => {
     try {
         if (!req.user) {
             res.status(401).json({ message: 'Unauthorized: User not authenticated' });
@@ -212,20 +218,22 @@ export const downloadGeneratedResume = async (req: Request, res: Response): Prom
         res.setHeader('Content-Type', 'application/pdf');
         res.send(Buffer.from(pdfBytes)); // Send the PDF bytes
 
-    } catch (error: any) {
-        console.error(`[download]: Error generating or downloading PDF for resume ${req.params.generatedResumeId}:`, error);
-        if (!res.headersSent) { // Avoid sending error if response already started
-            if (error.code === 'permission-denied' || error.status === 'PERMISSION_DENIED') {
-                res.status(500).json({ message: 'Internal Server Error: Firebase permission issue.' });
-            } else {
-                res.status(500).json({ message: 'Internal server error during PDF download', error: error.message });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error(`[download]: Error generating or downloading PDF for resume ${req.params.generatedResumeId}:`, error.message);
+            if (!res.headersSent) { // Avoid sending error if response already started
+                if (error.message.includes('GOOGLE_API_KEY_INVALID')) {
+                    res.status(500).json({ message: 'Internal Server Error: Invalid Gemini API Key configured.' });
+                } else {
+                    res.status(500).json({ message: 'Internal server error during PDF download', error: error.message });
+                }
             }
         }
     }
 };
 
 // --- Get Generated Resumes Function ---
-export const getGeneratedResumes = async (req: Request, res: Response): Promise<void> => {
+export const getGeneratedResumes = async (req: CustomRequest, res: Response): Promise<void> => {
     try {
         if (!req.user) {
             res.status(401).json({ message: 'Unauthorized: User not authenticated' });
@@ -263,12 +271,15 @@ export const getGeneratedResumes = async (req: Request, res: Response): Promise<
         console.log(`[getGenerated]: Found ${generatedResumes.length} generated resumes for user ${userId}`);
         res.status(200).json({ generatedResumes });
 
-    } catch (error: any) {
-        console.error(`[getGenerated]: Error fetching generated resumes for user ${req.user?.uid}:`, error);
-        if (error.code === 'permission-denied' || error.status === 'PERMISSION_DENIED') {
-            res.status(500).json({ message: 'Internal Server Error: Firebase permission issue.' });
-        } else {
-            res.status(500).json({ message: 'Internal server error fetching generated resumes', error: error.message });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error(`[getGenerated]: Error fetching generated resumes for user ${req.user?.uid}:`, error.message);
+            const err = error as { code?: string; status?: string; message: string };
+            if (err.code === 'permission-denied' || err.status === 'PERMISSION_DENIED') {
+                res.status(500).json({ message: 'Internal Server Error: Firebase permission issue.' });
+            } else {
+                res.status(500).json({ message: 'Internal server error fetching generated resumes', error: error.message });
+            }
         }
     }
 }; 
