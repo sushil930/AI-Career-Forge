@@ -1,9 +1,33 @@
-# AI Career Forge
+# AI Career Forge 🚀
+
+<p align="center">
+  <a href="https://ai-career-forge.vercel.app" target="_blank">
+    <img src="https://img.shields.io/badge/Live%20View-Click%20Here-brightgreen?style=for-the-badge&logo=vercel" alt="Live View"/>
+  </a>
+</p>
+
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen) ![License](https://img.shields.io/badge/license-MIT-blue) ![Version](https://img.shields.io/badge/version-1.0.0-blue)
+
+![Banner](https://via.placeholder.com/1200x300.png?text=AI+Career+Forge)
 
 AI Career Forge is a web application designed to assist users in optimizing their resumes and matching them with suitable job descriptions using AI.
 
-## Features
+## Table of Contents
+- [Features](#features)
+- [Technologies Used](#technologies-used)
+- [Project Structure](#project-structure)
+- [Models and Database](#models-and-database)
+- [User Workflow](#user-workflow)
+- [API Endpoints Overview](#api-endpoints-overview)
+- [Getting Started](#getting-started)
+- [Installation](#installation)
+- [Running the Project](#running-the-project)
+- [Building for Production](#building-for-production)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
 
+## Features ✨
 *   **User Authentication:** Secure signup and login functionality using Firebase Authentication.
 *   **Resume Upload & Parsing:** Users can upload resumes in PDF or DOCX format.
 *   **AI Resume Analysis:** Provides feedback and scoring on uploaded resumes using AI (Google Generative AI).
@@ -12,8 +36,7 @@ AI Career Forge is a web application designed to assist users in optimizing thei
 *   **Resume Tips:** Offers general advice and best practices for resume writing.
 *   **User Dashboard:** A central place for authenticated users to manage their resumes, generate cover letters, and access features.
 
-## Technologies Used
-
+## Technologies Used 🛠️
 **Frontend:**
 
 *   **Framework/Library:** React
@@ -37,8 +60,7 @@ AI Career Forge is a web application designed to assist users in optimizing thei
 *   **File Handling:** Multer (uploads), Mammoth (docx parsing), pdf-parse (pdf parsing)
 *   **API Testing:** Jest, Supertest (setup, actual tests might be pending)
 
-## Project Structure
-
+## Project Structure 🗂️
 The project is organized into two main parts:
 
 *   `frontend` (root directory): Contains the React application built with Vite.
@@ -58,13 +80,11 @@ The project is organized into two main parts:
         *   `models/`: Contains data models/schemas (e.g., for User, Resume, JobMatchResult) likely interacting with the database.
         *   `server.ts`: Express application setup and entry point.
 
-## Models and Database
-
+## Models and Database 📈
 *   **Models:** The `backend/src/models/` directory likely defines the structure of data used in the application, such as User profiles, Resume details (metadata, parsed content, analysis results), and potentially Job descriptions or Match results. These models interface with the database.
 *   **Database:** Firebase Firestore is used as the NoSQL database. It stores user account information, links to uploaded resumes (stored possibly in Firebase Storage or locally), parsed resume content, analysis scores, generated resume data, and job matching results.
 
-## User Workflow
-
+## User Workflow 📊
 A typical user interaction with AI Career Forge follows these steps:
 
 1.  **Authentication:**
@@ -82,8 +102,7 @@ A typical user interaction with AI Career Forge follows these steps:
     *   Access general resume tips for guidance.
 5.  **(Optional) Cover Letter:** Generate cover letters (feature implied by dashboard structure).
 
-## API Endpoints Overview
-
+## API Endpoints Overview 📚
 The backend exposes RESTful API endpoints, primarily authenticated using Firebase ID tokens verified by the `auth.middleware.ts`.
 
 Key route groups under `/api`:
@@ -106,8 +125,7 @@ Key route groups under `/api`:
 
 *(Refer to `backend/src/routes/*.routes.ts` and corresponding controllers in `backend/src/controllers/` for detailed request/response structures and logic.)*
 
-## Getting Started
-
+## Getting Started 🚀
 ### Prerequisites
 
 *   Node.js and npm (or yarn/pnpm/bun)
@@ -154,8 +172,7 @@ GOOGLE_API_KEY="your_google_generative_ai_api_key"
 CORS_ORIGIN="http://localhost:5173" # Or your deployed frontend URL
 ```
 
-### Installation
-
+## Installation 🛠️
 1.  **Clone the repository:**
     ```bash
     git clone https://github.com/sushil930/ai-career-forge.git
@@ -176,8 +193,7 @@ CORS_ORIGIN="http://localhost:5173" # Or your deployed frontend URL
     cd ..
     ```
 
-### Running the Project
-
+## Running the Project 🚀
 1.  **Start the Backend Server:**
     Open a terminal in the `backend` directory:
     ```bash
@@ -197,8 +213,7 @@ CORS_ORIGIN="http://localhost:5173" # Or your deployed frontend URL
 
 3.  Open your browser and navigate to `http://localhost:5173`.
 
-## Building for Production
-
+## Building for Production 📦
 **Frontend:**
 
 From the root directory:
@@ -215,8 +230,7 @@ npm run build
 ```
 This will compile TypeScript to JavaScript, typically in a `dist` or `build` folder within the `backend` directory. You can then run the compiled code using `node dist/server.js` (or similar).
 
-## Contributing
-
+## Contributing 🤝
 Contributions are welcome! If you'd like to contribute, please follow these steps:
 
 1.  Fork the repository.
@@ -227,6 +241,12 @@ Contributions are welcome! If you'd like to contribute, please follow these step
 
 Please ensure your code adheres to the existing style and that any new features are well-tested.
 
-## License
-
+## License 📄
 This project is licensed under the MIT License. See the `LICENSE` file for details (if one is created, otherwise assume MIT).
+
+## Contact 📧
+For questions or support, please reach out to [your-email@example.com](mailto:your-email@example.com).
+
+---
+
+Made with ❤️ by AI Career Forge Team.
