@@ -48,7 +48,7 @@ const Home = () => {
   return (
     <div className="flex flex-col min-h-screen bg-white overflow-hidden">
       {/* Hero Section - Redesigned */}
-      <section className="relative min-h-[90vh] flex items-center">
+      <section className="relative min-h-[90vh] flex items-center pt-16">
         {/* Background elements */}
         <div className="absolute inset-0 -z-10">
           {/* Abstract shape - right */}
@@ -194,7 +194,7 @@ const Home = () => {
                           <div className="w-20 h-20 rounded-full border-4 border-blue-100 flex items-center justify-center mr-4">
                             <div className="text-xl font-bold text-blue-600">87%</div>
                           </div>
-                          <div>
+                          <div className="flex flex-col justify-center">
                             <div className="font-medium mb-1 text-slate-800">ATS Compatibility</div>
                             <div className="flex items-center gap-1">
                               {[...Array(4)].map((_, i) => (

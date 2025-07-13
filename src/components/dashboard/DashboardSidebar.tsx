@@ -88,7 +88,7 @@ export function DashboardSidebar() {
           <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-blue-600 flex items-center justify-center text-white mr-2">
             <FileText size={16} className="sm:size-[18px]" />
           </div>
-          <span className="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">AI Resume Pro</span>
+          <span className="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">AI Career Forge</span>
         </Link>
       </SidebarHeader>
       
