@@ -58,7 +58,7 @@ export function DashboardSidebar() {
       title: "Cover Letters", 
       path: "/dashboard/cover-letter", 
       icon: FileEdit,
-      count: 2,
+      count: 0,
       isNew: true 
     },
     { 
@@ -81,7 +81,7 @@ export function DashboardSidebar() {
 
   return (
     <Sidebar className="bg-white border-r border-gray-200">
-      <SidebarRail className="bg-gray-50 border-r border-gray-200" />
+      <SidebarRail className="bg-white border-r border-gray-200" />
       
       <SidebarHeader className="border-b border-gray-200 pb-3 sm:pb-4 h-14 sm:h-16 flex items-center">
         <Link to="/" className="flex items-center p-2">
