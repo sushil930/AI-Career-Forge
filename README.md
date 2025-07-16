@@ -6,13 +6,12 @@
   </a>
 </p>
 
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen) ![License](https://img.shields.io/badge/license-MIT-blue) ![Version](https://img.shields.io/badge/version-1.0.0-blue)
-
-![Banner](https://via.placeholder.com/1200x300.png?text=AI+Career+Forge)
+![Banner](public/screenshots/banner1.png)
 
 AI Career Forge is a web application designed to assist users in optimizing their resumes and matching them with suitable job descriptions using AI.
 
 ## Table of Contents
+- [Screenshots](#screenshots-)
 - [Features](#features)
 - [Technologies Used](#technologies-used)
 - [Project Structure](#project-structure)
@@ -26,6 +25,34 @@ AI Career Forge is a web application designed to assist users in optimizing thei
 - [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
+
+## Screenshots 📸
+Here's a visual tour of AI Career Forge:
+
+| Screenshot 1 | Screenshot 2 |
+|--------------|--------------|
+| ![Screenshot 1](public/screenshots/Screenshot%202025-07-16%20144141.png) | ![Screenshot 2](public/screenshots/Screenshot_16-7-2025_142356_ai-career-forge.vercel.app.jpeg) |
+| *Hero Section* | *Home Page* |
+
+| Screenshot 3 | Screenshot 4 |
+|--------------|--------------|
+| ![Screenshot 3](public/screenshots/Screenshot_16-7-2025_14465_ai-career-forge.vercel.app.jpeg) | ![Screenshot 4](public/screenshots/Screenshot_16-7-2025_144814_ai-career-forge.vercel.app.jpeg) |
+| *Resume Analysis* | *Resume Builder* |
+
+| Screenshot 5 | Screenshot 6 |
+|--------------|--------------|
+| ![Screenshot 5](public/screenshots/Screenshot_16-7-2025_153954_ai-career-forge.vercel.app.jpeg) | ![Screenshot 6](public/screenshots/Screenshot_16-7-2025_154059_ai-career-forge.vercel.app.jpeg) |
+| *Job Matching* | *Cover Letter Generation* |
+
+| Screenshot 7 | Screenshot 8 |
+|--------------|--------------|
+| ![Screenshot 7](public/screenshots/Screenshot_16-7-2025_154339_ai-career-forge.vercel.app.jpeg) | ![Screenshot 8](public/screenshots/Screenshot_16-7-2025_154425_ai-career-forge.vercel.app.jpeg) |
+| *Cover Letter Result* | *Help & Tips* |
+
+| Screenshot 9 | Screenshot 10 |
+|--------------|--------------|
+| ![Screenshot 9](public/screenshots/Screenshot_16-7-2025_15444_ai-career-forge.vercel.app.jpeg) | ![Screenshot 10](public/screenshots/screenshot-1752657460493.png) |
+| *Used Documents* | *Dashboard* |
 
 ## Features ✨
 *   **User Authentication:** Secure signup and login functionality using Firebase Authentication.
